@@ -24,18 +24,26 @@ const notificacionController = {
       console.log('🔍 DEBUG obtenerMisNotificaciones - opciones:', opciones);
       console.log('🔍 DEBUG obtenerMisNotificaciones - usuarioId:', usuarioId);
 
+      // Obtener notificaciones paginadas
       const notificaciones = await Notificacion.obtenerPorUsuario(usuarioId, opciones);
-      const noLeidas = await Notificacion.contarNoLeidas(usuarioId);
+      
+      // Obtener estadísticas completas del usuario
+      const estadisticas = await Notificacion.obtenerEstadisticas(usuarioId);
       
       console.log('🔍 DEBUG obtenerMisNotificaciones - notificaciones encontradas:', notificaciones.length);
-      console.log('🔍 DEBUG obtenerMisNotificaciones - notificaciones:', notificaciones);
+      console.log('🔍 DEBUG obtenerMisNotificaciones - estadisticas completas:', estadisticas);
 
       res.json({
         success: true,
         data: {
           notificaciones,
-          noLeidas,
-          total: notificaciones.length
+          total: parseInt(estadisticas.total) || 0,
+          noLeidas: parseInt(estadisticas.no_leidas) || 0,
+          leidas: parseInt(estadisticas.leidas) || 0,
+          estadisticas: estadisticas,
+          paginaActual: Math.ceil(offset / limit) + 1,
+          totalPaginas: Math.ceil(estadisticas.total / limit),
+          itemsPorPagina: parseInt(limit)
         }
       });
     } catch (error) {

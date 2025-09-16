@@ -145,15 +145,29 @@ class Notificacion {
   }
 
   // Marcar notificación como leída
-  static async marcarComoLeida(id, usuarioId) {
-    const query = `
-      UPDATE notificaciones 
-      SET leida = 1, fecha_leida = CURRENT_TIMESTAMP 
-      WHERE id = ? AND destinatario_id = ? AND activo = 1
-    `;
+  static async marcarComoLeida(id, usuarioId = null) {
+    let query, params;
+    
+    if (usuarioId) {
+      // Usuario normal: solo puede marcar sus propias notificaciones
+      query = `
+        UPDATE notificaciones 
+        SET leida = 1, fecha_leida = CURRENT_TIMESTAMP 
+        WHERE id = ? AND destinatario_id = ? AND activo = 1
+      `;
+      params = [id, usuarioId];
+    } else {
+      // Administrador: puede marcar cualquier notificación
+      query = `
+        UPDATE notificaciones 
+        SET leida = 1, fecha_leida = CURRENT_TIMESTAMP 
+        WHERE id = ? AND activo = 1
+      `;
+      params = [id];
+    }
 
     try {
-      const result = await executeQuery(query, [id, usuarioId]);
+      const result = await executeQuery(query, params);
       return result.affectedRows > 0;
     } catch (error) {
       console.error('Error al marcar notificación como leída:', error);
@@ -179,15 +193,29 @@ class Notificacion {
   }
 
   // Eliminar notificación (soft delete)
-  static async eliminar(id, usuarioId) {
-    const query = `
-      UPDATE notificaciones 
-      SET activo = 0 
-      WHERE id = ? AND destinatario_id = ? AND activo = 1
-    `;
+  static async eliminar(id, usuarioId = null) {
+    let query, params;
+    
+    if (usuarioId) {
+      // Usuario normal: solo puede eliminar sus propias notificaciones
+      query = `
+        UPDATE notificaciones 
+        SET activo = 0 
+        WHERE id = ? AND destinatario_id = ? AND activo = 1
+      `;
+      params = [id, usuarioId];
+    } else {
+      // Administrador: puede eliminar cualquier notificación
+      query = `
+        UPDATE notificaciones 
+        SET activo = 0 
+        WHERE id = ? AND activo = 1
+      `;
+      params = [id];
+    }
 
     try {
-      const result = await executeQuery(query, [id, usuarioId]);
+      const result = await executeQuery(query, params);
       return result.affectedRows > 0;
     } catch (error) {
       console.error('Error al eliminar notificación:', error);

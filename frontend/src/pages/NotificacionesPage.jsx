@@ -63,7 +63,8 @@ const NotificacionesPage = () => {
         setStats({
           total: response.data.total || 0,
           noLeidas: response.data.noLeidas || 0,
-          porTipo: response.data.porTipo || {}
+          leidas: response.data.leidas || 0,
+          porTipo: response.data.estadisticas || {}
         });
         
         setPagination(prev => ({
@@ -214,7 +215,7 @@ const NotificacionesPage = () => {
                   Leídas
                 </Typography>
                 <Typography variant="h4" color="success.main">
-                  {stats.total - stats.noLeidas}
+                  {stats.leidas}
                 </Typography>
               </CardContent>
             </Card>
