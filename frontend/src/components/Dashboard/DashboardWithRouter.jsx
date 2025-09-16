@@ -46,12 +46,19 @@ import EditarMedicionPage from '../../pages/EditarMedicionPage';
 import VerMedicionPage from '../../pages/VerMedicionPage';
 import EvolucionMedicionesPage from '../../pages/EvolucionMedicionesPage';
 import MedicionesHomePage from '../../pages/MedicionesHomePage';
+import MedicionInBodyPage from '../../pages/MedicionInBodyPage';
 
 // Importar página de reportes
 import Reportes from '../../pages/Reportes';
 
 // Importar componentes de agenda
 import { AgendaPage } from '../Agenda';
+
+// Importar página de notificaciones
+import NotificacionesPage from '../../pages/NotificacionesPage';
+
+// Importar componente de notificaciones
+import NotificacionDropdown from '../Notificaciones/NotificacionDropdown';
 
 
 
@@ -136,6 +143,7 @@ const Dashboard = () => {
     if (path.startsWith('/mediciones')) return 'Mediciones';
     if (path.startsWith('/reportes')) return 'Reportes';
     if (path.startsWith('/agenda')) return 'Agenda';
+    if (path.startsWith('/notificaciones')) return 'Notificaciones';
     if (path.startsWith('/configuracion')) return 'Configuración';
     
     return 'Alimetria';
@@ -291,7 +299,8 @@ const Dashboard = () => {
             Alimetria - {getCurrentPageTitle()}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant="body2" sx={{ mr: 2 }}>
+            <NotificacionDropdown />
+            <Typography variant="body2" sx={{ mr: 2, ml: 2 }}>
               {user?.nombre} {user?.apellido}
             </Typography>
             <Chip 
@@ -396,7 +405,7 @@ const Dashboard = () => {
             <Route path="/mediciones/editar/:medicionId" element={<EditarMedicionPage />} />
             <Route path="/mediciones/ver/:medicionId" element={<VerMedicionPage />} />
             <Route path="/mediciones/evolucion/:pacienteId" element={<EvolucionMedicionesPage />} />
-            <Route path="/mediciones/inbody/:pacienteId" element={<NuevaMedicionPage tipo="inbody" />} />
+            <Route path="/mediciones/inbody/:pacienteId" element={<MedicionInBodyPage />} />
 
             
             {/* Rutas de reportes */}
@@ -405,6 +414,9 @@ const Dashboard = () => {
             
             {/* Rutas de agenda */}
             <Route path="/agenda" element={<AgendaPage />} />
+            
+            {/* Rutas de notificaciones */}
+            <Route path="/notificaciones" element={<NotificacionesPage />} />
             
             {/* Rutas futuras */}
             <Route path="/configuración" element={<ModuloEnDesarrollo titulo="Configuración del Sistema" />} />

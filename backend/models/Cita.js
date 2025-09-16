@@ -33,6 +33,10 @@ class Cita {
 
   // Crear nueva cita
   static async crear(citaData) {
+    // DEBUG: Log de la fecha recibida
+    console.log('🔍 DEBUG Cita.crear - fecha_hora recibida:', citaData.fecha_hora);
+    console.log('🔍 DEBUG Cita.crear - tipo de fecha:', typeof citaData.fecha_hora);
+    
     const query = `
       INSERT INTO citas (
         paciente_id, nutricionista_id, fecha_hora, duracion_minutos,
@@ -53,6 +57,8 @@ class Cita {
       citaData.consultorio_id,
       citaData.usuario_creador_id
     ];
+
+    console.log('🔍 DEBUG Cita.crear - values que van a la BD:', values);
 
     try {
       const [result] = await db.execute(query, values);
@@ -183,18 +189,25 @@ class Cita {
 
   // Verificar disponibilidad de horario
   static async verificarDisponibilidad(nutricionista_id, fecha_hora, duracion_minutos = 60, cita_id = null) {
+    console.log('🔍 DEBUG Cita.verificarDisponibilidad - parámetros:', {
+      nutricionista_id,
+      fecha_hora,
+      duracion_minutos,
+      cita_id
+    });
+
+    // *** SIMPLIFICACIÓN: Query más simple y clara ***
     let query = `
       SELECT COUNT(*) as conflictos
       FROM citas
       WHERE nutricionista_id = ?
         AND estado NOT IN ('cancelada', 'no_asistio')
         AND (
-          (fecha_hora <= ? AND DATE_ADD(fecha_hora, INTERVAL duracion_minutos MINUTE) > ?) OR
-          (fecha_hora < DATE_ADD(?, INTERVAL ? MINUTE) AND DATE_ADD(fecha_hora, INTERVAL duracion_minutos MINUTE) >= DATE_ADD(?, INTERVAL ? MINUTE))
+          ABS(TIMESTAMPDIFF(MINUTE, fecha_hora, ?)) < ?
         )
     `;
 
-    const values = [nutricionista_id, fecha_hora, fecha_hora, fecha_hora, duracion_minutos, fecha_hora, duracion_minutos];
+    const values = [nutricionista_id, fecha_hora, duracion_minutos];
 
     // Si estamos editando una cita, excluirla de la verificación
     if (cita_id) {
@@ -202,11 +215,22 @@ class Cita {
       values.push(cita_id);
     }
 
+    console.log('🔍 DEBUG Cita.verificarDisponibilidad - query:', query);
+    console.log('🔍 DEBUG Cita.verificarDisponibilidad - values:', values);
+
     try {
       const [rows] = await db.execute(query, values);
-      return rows[0].conflictos === 0;
+      const conflictos = rows[0].conflictos;
+      const disponible = conflictos === 0;
+      
+      console.log('🔍 DEBUG Cita.verificarDisponibilidad - conflictos encontrados:', conflictos);
+      console.log('🔍 DEBUG Cita.verificarDisponibilidad - disponible:', disponible);
+      
+      return disponible;
     } catch (error) {
-      throw error;
+      console.error('❌ ERROR en Cita.verificarDisponibilidad:', error);
+      // En caso de error, devolver false por seguridad
+      return false;
     }
   }
 
@@ -359,6 +383,50 @@ class Cita {
     try {
       const [result] = await db.execute(query, [id]);
       return result.affectedRows > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Obtener citas de hoy y mañana (para dashboard)
+  static async obtenerProximasCompletas() {
+    const query = `
+      SELECT 
+        c.*,
+        CONCAT(p.nombre, ' ', p.apellido) as paciente_nombre,
+        p.telefono as paciente_telefono,
+        p.email as paciente_email,
+        CONCAT(u.nombre, ' ', IFNULL(u.apellido, '')) as nutricionista_nombre
+      FROM citas c
+      INNER JOIN pacientes p ON c.paciente_id = p.id
+      INNER JOIN usuarios u ON c.nutricionista_id = u.id
+      WHERE DATE(c.fecha_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+        AND c.estado IN ('programada', 'confirmada', 'en_curso')
+      ORDER BY c.fecha_hora ASC
+    `;
+
+    try {
+      const [rows] = await db.execute(query);
+      return rows.map(row => new Cita(row));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Obtener citas vencidas que necesitan actualización automática
+  static async obtenerCitasVencidas(fechaActual) {
+    const query = `
+      SELECT c.id, c.fecha_hora, c.estado, c.duracion_minutos,
+             CONCAT(p.nombre, ' ', p.apellido) as paciente_nombre
+      FROM citas c
+      INNER JOIN pacientes p ON c.paciente_id = p.id
+      WHERE c.estado IN ('programada', 'confirmada')
+        AND DATE_ADD(c.fecha_hora, INTERVAL c.duracion_minutos MINUTE) < ?
+    `;
+
+    try {
+      const [rows] = await db.execute(query, [fechaActual]);
+      return rows;
     } catch (error) {
       throw error;
     }

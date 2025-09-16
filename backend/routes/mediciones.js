@@ -101,4 +101,26 @@ router.get('/ocr/texto/:filename',
   MedicionController.obtenerTextoOCR
 );
 
+// ==============================
+// NUEVAS RUTAS DE OCR MEJORADAS
+// ==============================
+
+/**
+ * POST /api/mediciones/inbody
+ * Procesar archivo InBody con OCR y guardar
+ */
+router.post('/inbody',
+  roleMiddleware(['administrador', 'nutricionista']),
+  MedicionController.procesarInBody
+);
+
+/**
+ * POST /api/mediciones/inbody/preview
+ * Vista previa de OCR sin guardar
+ */
+router.post('/inbody/preview',
+  roleMiddleware(['administrador', 'nutricionista']),
+  MedicionController.previsualizarInBody
+);
+
 module.exports = router;

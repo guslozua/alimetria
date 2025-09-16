@@ -10,11 +10,19 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  charset: 'utf8mb4'
+  charset: 'utf8mb4',
+  timezone: '-03:00'  // Zona horaria de Argentina (GMT-3)
 };
 
-// Crear pool de conexiones
-const pool = mysql.createPool(dbConfig);
+// Crear pool de conexiones con configuración de zona horaria
+const pool = mysql.createPool({
+  ...dbConfig,
+  acquireTimeout: 60000,
+  timeout: 60000,
+  queryTimeout: 30000,
+  initSql: "SET time_zone = '-03:00'",  // Forzar zona horaria de Argentina
+  dateStrings: false  // Mantener objetos Date
+});
 
 // Función para probar la conexión
 const testConnection = async () => {

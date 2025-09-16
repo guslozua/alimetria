@@ -162,7 +162,7 @@ class AuthController {
   // Obtener perfil del usuario actual
   static async getProfile(req, res) {
     try {
-      const user = await Usuario.findById(req.user.userId);
+      const user = await Usuario.findById(req.user.id);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -200,7 +200,7 @@ class AuthController {
         });
       }
 
-      const user = await Usuario.findById(req.user.userId);
+      const user = await Usuario.findById(req.user.id);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -247,7 +247,7 @@ class AuthController {
 
       const { currentPassword, newPassword } = req.body;
 
-      const user = await Usuario.findById(req.user.userId);
+      const user = await Usuario.findById(req.user.id);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -290,11 +290,30 @@ class AuthController {
   // Verificar token (útil para validar sesión activa)
   static async verifyToken(req, res) {
     try {
-      const user = await Usuario.findById(req.user.userId);
+      console.log('🔍 DEBUG verifyToken - req.user:', req.user);
+      
+      // El middleware authenticateToken ya verificó el token y pobló req.user
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Token inválido - información de usuario no disponible'
+        });
+      }
+
+      // Buscar usuario actualizado en base de datos
+      const user = await Usuario.findById(req.user.id);
       if (!user) {
         return res.status(404).json({
           success: false,
           message: 'Usuario no encontrado'
+        });
+      }
+
+      // Verificar que el usuario siga activo
+      if (!user.activo) {
+        return res.status(401).json({
+          success: false,
+          message: 'Usuario desactivado'
         });
       }
 

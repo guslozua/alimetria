@@ -54,6 +54,12 @@ class Usuario {
   // Buscar usuario por ID
   static async findById(id) {
     try {
+      // Validar que el ID no sea undefined o null
+      if (!id || id === undefined) {
+        console.warn('❌ findById llamado con ID inválido:', id);
+        return null;
+      }
+      
       const query = `
         SELECT u.*, r.nombre as rol_nombre, r.permisos, c.nombre as consultorio_nombre
         FROM usuarios u

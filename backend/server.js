@@ -5,12 +5,16 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { testConnection, createDatabase } = require('./config/database');
+const notificacionService = require('./utils/notificacionService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares de seguridad
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -38,8 +42,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Servir archivos estáticos (uploads)
-app.use('/uploads', express.static('uploads'));
+// Servir archivos estáticos (uploads) con headers CORS
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+}, express.static('uploads', {
+  setHeaders: (res, path, stat) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 // Rutas base
 app.get('/', (req, res) => {
@@ -83,6 +96,7 @@ app.use('/api/reportes', require('./routes/reportes'));
 app.use('/api/test-pdf', require('./routes/test-pdf')); // Rutas de test para PDFs
 app.use('/api/citas', require('./routes/citas'));
 app.use('/api/citas-test', require('./routes/citas-test')); // Rutas de prueba para citas
+app.use('/api/notificaciones', require('./routes/notificaciones'));
 // app.use('/api/usuarios', require('./routes/usuarios'));
 
 // Manejo de errores 404
@@ -112,6 +126,9 @@ const startServer = async () => {
     const dbConnected = await testConnection();
     if (!dbConnected) {
       console.warn('⚠️ Servidor iniciando sin conexión a la base de datos');
+    } else {
+      // Inicializar servicio de notificaciones solo si hay conexión a BD
+      notificacionService.iniciar();
     }
     
     app.listen(PORT, () => {
@@ -119,6 +136,7 @@ const startServer = async () => {
       console.log(`📡 API disponible en: http://localhost:${PORT}`);
       console.log(`🏥 Health check: http://localhost:${PORT}/health`);
       console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+      console.log('🔔 Sistema de notificaciones:', dbConnected ? 'ACTIVO' : 'INACTIVO');
     });
   } catch (error) {
     console.error('❌ Error iniciando servidor:', error);

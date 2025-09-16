@@ -18,6 +18,8 @@ const authenticateToken = async (req, res, next) => {
     // Verificar token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    console.log('🔍 DEBUG auth middleware - decoded token:', decoded);
+    
     // Verificar que el usuario aún existe y está activo
     const user = await Usuario.findById(decoded.userId);
     if (!user) {
@@ -29,7 +31,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Agregar información del usuario al request
     req.user = {
-      userId: user.id,
+      id: user.id,  // Cambiado de userId a id
       email: user.email,
       rol: user.rol_nombre,
       rolId: user.rol_id,

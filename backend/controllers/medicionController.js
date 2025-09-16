@@ -37,6 +37,240 @@ class MedicionController {
     }
   }
 
+  // NUEVO: Procesar archivo InBody con OCR
+  static async procesarInBody(req, res) {
+    const { processInBodyFile } = require('../utils/inbodyOcr');
+    const multer = require('multer');
+    const path = require('path');
+
+    // Configuración de multer para uploads
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        const uploadPath = 'uploads/inbody';
+        cb(null, uploadPath);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        cb(null, `inbody-${uniqueSuffix}${extension}`);
+      }
+    });
+
+    const upload = multer({
+      storage: storage,
+      limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB máximo
+      },
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|pdf/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (mimetype && extname) {
+          return cb(null, true);
+        } else {
+          cb(new Error('Solo se permiten archivos de imagen (JPEG, PNG) y PDF'));
+        }
+      }
+    });
+
+    const uploadInBody = upload.single('inbody_file');
+
+    uploadInBody(req, res, async (err) => {
+      if (err) {
+        console.error('Error en upload:', err);
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'Error subiendo archivo'
+        });
+      }
+
+      try {
+        const { paciente_id } = req.body;
+        
+        if (!req.file) {
+          return res.status(400).json({
+            success: false,
+            message: 'No se recibió ningún archivo'
+          });
+        }
+
+        if (!paciente_id) {
+          return res.status(400).json({
+            success: false,
+            message: 'ID de paciente requerido'
+          });
+        }
+
+        console.log('📁 Archivo recibido:', req.file.path);
+        console.log('👤 Paciente ID:', paciente_id);
+
+        // Procesar archivo con OCR
+        const ocrResult = await processInBodyFile(
+          req.file.path,
+          paciente_id,
+          req.user.id
+        );
+
+        if (!ocrResult.success) {
+          return res.status(400).json({
+            success: false,
+            message: 'Error procesando archivo InBody',
+            error: ocrResult.error,
+            validation: ocrResult.validation
+          });
+        }
+
+        // Guardar medición en base de datos
+        const nuevaMedicionId = await Medicion.create(ocrResult.data);
+        
+        // Obtener la medición completa recién creada para devolver todos los datos
+        const medicionCompleta = await Medicion.getById(nuevaMedicionId);
+        console.log('📋 Medición completa obtenida:', medicionCompleta);
+
+        // Calcular confianza basada en los datos extraídos
+        const calcularConfianza = (extracted, validation) => {
+          let score = 0;
+          let total = 0;
+          
+          // Verificar campos principales
+          const camposPrincipales = ['peso', 'masa_muscular', 'porcentaje_grasa', 'puntuacion_corporal'];
+          camposPrincipales.forEach(campo => {
+            total += 25; // Cada campo vale 25 puntos
+            if (extracted[campo] !== null && extracted[campo] !== undefined) {
+              score += 25;
+            }
+          });
+          
+          // Penalizar por errores
+          score -= validation.errors.length * 10;
+          score -= validation.warnings.length * 5;
+          
+          // Asegurar que esté entre 0 y 100
+          return Math.max(0, Math.min(100, score));
+        };
+
+        const confianza = calcularConfianza(ocrResult.extracted, ocrResult.validation);
+
+        res.json({
+          success: true,
+          message: 'Archivo InBody procesado exitosamente',
+          data: {
+            medicion: medicionCompleta, // Devolver medición completa en lugar del ID
+            extracted_data: ocrResult.extracted,
+            validation: ocrResult.validation,
+            confianza: confianza,
+            archivo_original: req.file.filename,
+            file_info: {
+              filename: req.file.filename,
+              originalname: req.file.originalname,
+              size: req.file.size
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error procesando InBody:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Error interno del servidor',
+          error: error.message
+        });
+      }
+    });
+  }
+
+  // NUEVO: Vista previa de datos OCR sin guardar
+  static async previsualizarInBody(req, res) {
+    const multer = require('multer');
+    const path = require('path');
+
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        const uploadPath = 'uploads/temp';
+        cb(null, uploadPath);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        cb(null, `temp-${uniqueSuffix}${extension}`);
+      }
+    });
+
+    const upload = multer({
+      storage: storage,
+      limits: {
+        fileSize: 10 * 1024 * 1024
+      },
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|pdf/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (mimetype && extname) {
+          return cb(null, true);
+        } else {
+          cb(new Error('Solo se permiten archivos de imagen (JPEG, PNG) y PDF'));
+        }
+      }
+    });
+
+    const uploadInBody = upload.single('inbody_file');
+
+    uploadInBody(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'Error subiendo archivo'
+        });
+      }
+
+      try {
+        if (!req.file) {
+          return res.status(400).json({
+            success: false,
+            message: 'No se recibió ningún archivo'
+          });
+        }
+
+        // Solo extraer datos, no guardar
+        const { getOCRInstance } = require('../utils/inbodyOcr');
+        const ocr = getOCRInstance();
+        const extractedData = await ocr.extractInBodyData(req.file.path);
+        const validation = ocr.validateExtractedData(extractedData);
+
+        // Limpiar archivo temporal
+        const fs = require('fs');
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (cleanupError) {
+          console.warn('No se pudo limpiar archivo temporal:', cleanupError.message);
+        }
+
+        res.json({
+          success: true,
+          message: 'Vista previa de datos extraídos',
+          data: {
+            extracted_data: extractedData,
+            validation: validation,
+            suggestions: {
+              needs_manual_review: validation.warnings.length > 0,
+              confidence: validation.errors.length === 0 ? 'alta' : 'baja'
+            }
+          }
+        });
+
+      } catch (error) {
+        console.error('Error en vista previa:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Error procesando archivo',
+          error: error.message
+        });
+      }
+    });
+  }
+
   // Obtener una medición específica
   static async getMedicion(req, res) {
     try {

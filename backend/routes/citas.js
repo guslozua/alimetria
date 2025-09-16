@@ -8,7 +8,7 @@ const { verificarPermisos } = require('../middleware/permisos');
 // Middleware de autenticación para todas las rutas
 router.use(authenticateToken);
 
-// Validaciones para crear/actualizar citas
+// Validaciones para crear citas
 const validacionesCita = [
   body('paciente_id')
     .isInt({ min: 1 })
@@ -20,15 +20,8 @@ const validacionesCita = [
   
   body('fecha_hora')
     .isISO8601()
-    .withMessage('Formato de fecha inválido')
-    .custom((value) => {
-      const fecha = new Date(value);
-      const ahora = new Date();
-      if (fecha <= ahora) {
-        throw new Error('La fecha debe ser futura');
-      }
-      return true;
-    }),
+    .withMessage('Formato de fecha inválido'),
+    // Removemos la validación de fecha futura para mayor flexibilidad
   
   body('duracion_minutos')
     .optional()
@@ -191,6 +184,18 @@ router.patch('/:id/completar',
       .withMessage('Las notas posteriores no pueden exceder 1000 caracteres')
   ],
   CitaController.completarCita
+);
+
+// Nueva ruta para marcar cita como completada manualmente
+router.patch('/:id/marcar-completada',
+  verificarPermisos(['editar_citas']),
+  [
+    body('notas_posteriores')
+      .optional()
+      .isLength({ max: 1000 })
+      .withMessage('Las notas posteriores no pueden exceder 1000 caracteres')
+  ],
+  CitaController.marcarCompletada
 );
 
 // DELETE /api/citas/:id - Eliminar cita (soft delete)

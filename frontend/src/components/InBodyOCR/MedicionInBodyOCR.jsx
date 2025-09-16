@@ -86,7 +86,7 @@ const MedicionInBodyOCR = ({
       case 1:
         return (
           <FormularioRevisionOCR
-            ocrData={ocrData?.ocrData}
+            ocrData={ocrData}
             pacienteId={pacienteId}
             onSave={handleMedicionGuardada}
             onCancel={() => setActiveStep(0)}

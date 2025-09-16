@@ -36,6 +36,8 @@ import {
 } from 'recharts';
 import { medicionesService } from '../../services/medicionesService';
 import { pacientesService } from '../../services/pacientesService';
+import ReportesService from '../../services/reportes';
+import EstadisticasResumen from '../Reportes/EstadisticasResumen';
 
 const EvolucionMediciones = () => {
   const { pacienteId } = useParams();
@@ -45,6 +47,7 @@ const EvolucionMediciones = () => {
   const [paciente, setPaciente] = useState(null);
   const [mediciones, setMediciones] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
+  const [datosReporte, setDatosReporte] = useState(null);
   const [campoSeleccionado, setCampoSeleccionado] = useState('peso');
   const [datosEvolucion, setDatosEvolucion] = useState([]);
 
@@ -80,9 +83,15 @@ const EvolucionMediciones = () => {
       const responseMediciones = await medicionesService.getMedicionesPorPaciente(pacienteId);
       setMediciones(responseMediciones.data || []);
 
-      // Cargar estadísticas
-      const responseEstadisticas = await medicionesService.getEstadisticas(pacienteId);
-      setEstadisticas(responseEstadisticas.data);
+      // Cargar datos de reporte (incluye estadísticas formateadas)
+      const responseReporte = await ReportesService.obtenerDatosPaciente(pacienteId, {});
+      console.log('📊 Datos de reporte en evolución:', responseReporte);
+      setDatosReporte(responseReporte);
+      
+      // Mantener compatibilidad con estadísticas anteriores
+      if (responseReporte.estadisticas) {
+        setEstadisticas(responseReporte.estadisticas);
+      }
 
     } catch (error) {
       setError('Error al cargar los datos');
@@ -173,76 +182,18 @@ const EvolucionMediciones = () => {
           Volver
         </Button>
         <Typography variant="h5">
-          Evolución - {paciente?.nombre} {paciente?.apellido}
+          Evolución - {datosReporte?.paciente?.nombre} {datosReporte?.paciente?.apellido}
         </Typography>
       </Box>
 
-      {/* Estadísticas generales */}
-      {estadisticas && (
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" color="textSecondary" gutterBottom>
-                  Total Mediciones
-                </Typography>
-                <Typography variant="h4">
-                  {estadisticas.total_mediciones}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" color="textSecondary" gutterBottom>
-                  Peso Actual
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Typography variant="h4">
-                    {estadisticas.peso_actual ? `${estadisticas.peso_actual} kg` : '-'}
-                  </Typography>
-                  {estadisticas.cambio_peso && (
-                    <Box ml={1}>
-                      {getTendenciaIcon(estadisticas.cambio_peso)}
-                    </Box>
-                  )}
-                </Box>
-                {estadisticas.cambio_peso && (
-                  <Typography variant="body2" color="textSecondary">
-                    {estadisticas.cambio_peso && typeof estadisticas.cambio_peso === 'number' ? 
-                      `${estadisticas.cambio_peso > 0 ? '+' : ''}${estadisticas.cambio_peso.toFixed(1)} kg` : '-'
-                    }
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" color="textSecondary" gutterBottom>
-                  IMC Promedio
-                </Typography>
-                <Typography variant="h4">
-                  {estadisticas.imc_promedio && typeof estadisticas.imc_promedio === 'number' ? estadisticas.imc_promedio.toFixed(1) : '-'}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" color="textSecondary" gutterBottom>
-                  Grasa Promedio
-                </Typography>
-                <Typography variant="h4">
-                  {estadisticas.grasa_promedio && typeof estadisticas.grasa_promedio === 'number' ? `${estadisticas.grasa_promedio.toFixed(1)}%` : '-'}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      {/* Estadísticas generales con el diseño de reportes */}
+      {datosReporte && datosReporte.estadisticas && (
+        <Box sx={{ mb: 3 }}>
+          <EstadisticasResumen 
+            estadisticas={datosReporte.estadisticas} 
+            paciente={datosReporte.paciente || paciente}
+          />
+        </Box>
       )}
 
       {/* Selector de campo y gráfico */}

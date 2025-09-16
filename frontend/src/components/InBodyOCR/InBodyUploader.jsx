@@ -78,26 +78,29 @@ const InBodyUploader = ({ pacienteId, onSuccess, onError }) => {
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (response.data.success) {
-        setOcrResult(response.data.data);
+      // CORRECCIÓN: El interceptor ya devuelve response.data, no necesitamos response.data.success
+      console.log('🔍 Respuesta recibida:', response);
+      
+      if (response.success) {
+        setOcrResult(response.data);
         
         // Mostrar notificación de éxito
         Swal.fire({
           icon: 'success',
           title: '¡Imagen procesada!',
-          text: `Confianza del OCR: ${response.data.data.confianza}%`,
+          text: response.message || 'Imagen procesada correctamente',
           timer: 2000,
           showConfirmButton: false
         });
 
-        if (onSuccess) onSuccess(response.data.data);
+        if (onSuccess) onSuccess(response.data);
       } else {
-        throw new Error(response.data.message || 'Error al procesar imagen');
+        throw new Error(response.message || 'Error al procesar imagen');
       }
 
     } catch (err) {
       console.error('❌ Error en OCR:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Error al procesar imagen';
+      const errorMessage = err.message || 'Error al procesar imagen';
       setError(errorMessage);
       
       Swal.fire({
@@ -123,19 +126,19 @@ const InBodyUploader = ({ pacienteId, onSuccess, onError }) => {
     try {
       const response = await medicionesService.reprocesarImagenOCR(ocrResult.archivo, pacienteId);
       
-      if (response.data.success) {
-        setOcrResult(response.data.data);
+      if (response.success) {
+        setOcrResult(response.data);
         
         Swal.fire({
           icon: 'success',
           title: 'Imagen reprocesada',
-          text: `Nueva confianza: ${response.data.data.confianza}%`,
+          text: response.message || 'Imagen reprocesada correctamente',
           timer: 2000,
           showConfirmButton: false
         });
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al reprocesar imagen';
+      const errorMessage = err.message || 'Error al reprocesar imagen';
       setError(errorMessage);
       
       Swal.fire({
@@ -155,8 +158,8 @@ const InBodyUploader = ({ pacienteId, onSuccess, onError }) => {
     try {
       const response = await medicionesService.obtenerTextoOCR(ocrResult.archivo);
       
-      if (response.data.success) {
-        const { rawText, lines } = response.data.data;
+      if (response.success) {
+        const { rawText, lines } = response.data;
         
         Swal.fire({
           title: 'Texto OCR Extraído',
@@ -272,9 +275,9 @@ const InBodyUploader = ({ pacienteId, onSuccess, onError }) => {
               
               <Box display="flex" gap={1}>
                 <Chip
-                  icon={getConfianzaIcon(ocrResult.confianza)}
-                  label={`Confianza: ${ocrResult.confianza}%`}
-                  color={getConfianzaColor(ocrResult.confianza)}
+                  icon={getConfianzaIcon(ocrResult.confianza || 0)}
+                  label={`Confianza: ${ocrResult.confianza || 0}%`}
+                  color={getConfianzaColor(ocrResult.confianza || 0)}
                   size="small"
                 />
                 
@@ -296,156 +299,107 @@ const InBodyUploader = ({ pacienteId, onSuccess, onError }) => {
 
             {/* Datos extraídos */}
             <Grid container spacing={2}>
-              {ocrResult.ocrData.peso && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Peso
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.peso} kg
-                      {ocrResult.ocrData.cambio_peso && (
-                        <Chip 
-                          label={`${ocrResult.ocrData.cambio_peso > 0 ? '+' : ''}${ocrResult.ocrData.cambio_peso}`}
-                          size="small"
-                          color={ocrResult.ocrData.cambio_peso > 0 ? 'error' : 'success'}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+              {ocrResult.medicion && (
+                <>
+                  {ocrResult.medicion.peso && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Peso
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.peso} kg
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.masa_muscular && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Masa Muscular
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.masa_muscular} kg
-                      {ocrResult.ocrData.cambio_masa_muscular && (
-                        <Chip 
-                          label={`${ocrResult.ocrData.cambio_masa_muscular > 0 ? '+' : ''}${ocrResult.ocrData.cambio_masa_muscular}`}
-                          size="small"
-                          color={ocrResult.ocrData.cambio_masa_muscular > 0 ? 'success' : 'error'}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+                  {ocrResult.medicion.musculo && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Masa Muscular
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.musculo} kg
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.grasa_corporal_kg && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Grasa Corporal
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.grasa_corporal_kg} kg
-                      {ocrResult.ocrData.cambio_grasa_corporal && (
-                        <Chip 
-                          label={`${ocrResult.ocrData.cambio_grasa_corporal > 0 ? '+' : ''}${ocrResult.ocrData.cambio_grasa_corporal}`}
-                          size="small"
-                          color={ocrResult.ocrData.cambio_grasa_corporal < 0 ? 'success' : 'error'}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+                  {ocrResult.medicion.grasa_corporal_kg && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Grasa Corporal
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.grasa_corporal_kg} kg
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.imc && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      IMC
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.imc} kg/m²
-                      {ocrResult.ocrData.cambio_imc && (
-                        <Chip 
-                          label={`${ocrResult.ocrData.cambio_imc > 0 ? '+' : ''}${ocrResult.ocrData.cambio_imc}`}
-                          size="small"
-                          color={ocrResult.ocrData.cambio_imc < 0 ? 'success' : 'error'}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+                  {ocrResult.medicion.imc && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          IMC
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.imc} kg/m²
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.grasa_corporal_porcentaje && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      % Grasa Corporal
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.grasa_corporal_porcentaje}%
-                      {ocrResult.ocrData.cambio_grasa_porcentaje && (
-                        <Chip 
-                          label={`${ocrResult.ocrData.cambio_grasa_porcentaje > 0 ? '+' : ''}${ocrResult.ocrData.cambio_grasa_porcentaje}`}
-                          size="small"
-                          color={ocrResult.ocrData.cambio_grasa_porcentaje < 0 ? 'success' : 'error'}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+                  {ocrResult.medicion.grasa_corporal && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          % Grasa Corporal
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.grasa_corporal}%
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.puntuacion_corporal && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Puntuación
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.puntuacion_corporal} pts
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
+                  {ocrResult.medicion.puntuacion_corporal && (
+                    <Grid item xs={6} sm={4}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Puntuación
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {ocrResult.medicion.puntuacion_corporal} pts
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
 
-              {ocrResult.ocrData.percentil && (
-                <Grid item xs={6} sm={4}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Percentil
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {ocrResult.ocrData.percentil}%
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
-
-              {ocrResult.ocrData.fecha_medicion && (
-                <Grid item xs={12}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      Fecha y Hora de Medición
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {new Date(ocrResult.ocrData.fecha_hora_completa || ocrResult.ocrData.fecha_medicion).toLocaleString('es-ES')}
-                    </Typography>
-                  </Box>
-                </Grid>
+                  {ocrResult.medicion.fecha_medicion && (
+                    <Grid item xs={12}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Fecha y Hora de Medición
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold">
+                          {new Date(ocrResult.medicion.fecha_medicion).toLocaleString('es-ES')}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  )}
+                </>
               )}
             </Grid>
 
             {/* Alertas de confianza */}
-            {ocrResult.confianza < 70 && (
+            {(ocrResult.confianza || 0) < 70 && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  La confianza del OCR es baja ({ocrResult.confianza}%). 
+                  La confianza del OCR es baja ({ocrResult.confianza || 0}%). 
                   Te recomendamos revisar y corregir los datos antes de guardar la medición.
                 </Typography>
               </Alert>

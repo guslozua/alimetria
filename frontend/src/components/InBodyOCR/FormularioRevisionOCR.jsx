@@ -49,8 +49,12 @@ const FormularioRevisionOCR = ({
 
   // Inicializar formulario
   useEffect(() => {
+    console.log('🔍 FormularioRevisionOCR - ocrData recibido:', ocrData);
+    
     if (ocrData) {
       const mappedData = medicionesService.mapearDatosOCR(ocrData);
+      console.log('🔍 FormularioRevisionOCR - datos mapeados:', mappedData);
+      
       setFormData({
         ...mappedData,
         paciente_id: pacienteId,
@@ -171,15 +175,29 @@ const FormularioRevisionOCR = ({
     setLoading(true);
     
     try {
-      await medicionesService.crearMedicionDesdeOCR(formData);
-      
-      Swal.fire({
-        icon: 'success',
-        title: '¡Medición guardada!',
-        text: 'La medición InBody se ha guardado exitosamente',
-        timer: 2000,
-        showConfirmButton: false
-      });
+      // Si hay una medición existente desde el OCR, actualizarla
+      if (ocrData && ocrData.medicion && ocrData.medicion.id) {
+        await medicionesService.actualizarMedicion(ocrData.medicion.id, formData);
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Medición actualizada!',
+          text: 'La medición InBody se ha actualizado exitosamente',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        // Si no hay medición existente, crear una nueva
+        await medicionesService.crearMedicion(formData);
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Medición guardada!',
+          text: 'La medición InBody se ha guardado exitosamente',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
       
       if (onSave) onSave(formData);
       
@@ -189,7 +207,7 @@ const FormularioRevisionOCR = ({
       Swal.fire({
         icon: 'error',
         title: 'Error al guardar',
-        text: error.response?.data?.message || 'No se pudo guardar la medición'
+        text: error.message || 'No se pudo guardar la medición'
       });
     } finally {
       setLoading(false);
@@ -235,6 +253,43 @@ const FormularioRevisionOCR = ({
                 La confianza del OCR es baja. Te recomendamos revisar cuidadosamente todos los campos.
               </Typography>
             </Alert>
+          )}
+
+          {/* Imagen InBody */}
+          {ocrData && ocrData.archivo_original && (
+            <Card sx={{ mb: 3, bgcolor: 'grey.50' }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom display="flex" alignItems="center" gap={1}>
+                  <InfoIcon color="primary" />
+                  Imagen InBody Procesada
+                </Typography>
+                <Box 
+                  component="img"
+                  src={`http://localhost:5001/uploads/inbody/${ocrData.archivo_original}`}
+                  alt="Imagen InBody H30"
+                  sx={{
+                    maxWidth: '100%',
+                    maxHeight: '300px',
+                    objectFit: 'contain',
+                    border: '2px solid #ddd',
+                    borderRadius: 2,
+                    display: 'block',
+                    margin: '0 auto',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': {
+                      transform: 'scale(1.02)'
+                    }
+                  }}
+                  onClick={() => {
+                    window.open(`http://localhost:5001/uploads/inbody/${ocrData.archivo_original}`, '_blank');
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                  📷 {ocrData.archivo_original} • Haz clic para ver en tamaño completo
+                </Typography>
+              </CardContent>
+            </Card>
           )}
 
           <Grid container spacing={3}>

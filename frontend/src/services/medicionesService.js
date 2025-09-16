@@ -7,6 +7,48 @@ export const medicionesService = {
     return await api.get(`/mediciones/paciente/${pacienteId}`, { params });
   },
 
+  // Validar imagen InBody antes de subir
+  validarImagenInBody: (file) => {
+    const errores = [];
+    
+    // Validar que sea un archivo
+    if (!file) {
+      errores.push('No se seleccionó ningún archivo');
+      return { esValido: false, errores };
+    }
+    
+    // Validar tamaño (máximo 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      errores.push('El archivo es demasiado grande. Máximo 10MB.');
+    }
+    
+    // Validar tipo de archivo
+    const tiposPermitidos = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/bmp',
+      'image/tiff',
+      'application/pdf'
+    ];
+    
+    if (!tiposPermitidos.includes(file.type)) {
+      errores.push('Tipo de archivo no permitido. Solo se aceptan: JPEG, PNG, BMP, TIFF, PDF');
+    }
+    
+    // Validar nombre del archivo
+    const nombreValido = /^[a-zA-Z0-9._-]+$/.test(file.name);
+    if (!nombreValido) {
+      errores.push('El nombre del archivo contiene caracteres no válidos');
+    }
+    
+    return {
+      esValido: errores.length === 0,
+      errores
+    };
+  },
+
   // Obtener una medición específica
   getMedicion: async (medicionId) => {
     return await api.get(`/mediciones/${medicionId}`);
@@ -29,13 +71,25 @@ export const medicionesService = {
 
   // ===== MÉTODOS OCR INBODY =====
 
-  // Procesar imagen InBody con OCR
+  // Procesar imagen InBody con OCR (MÉTODO ACTUALIZADO)
   procesarImagenInBody: async (file, pacienteId) => {
     const formData = new FormData();
-    formData.append('imagen', file);
-    formData.append('pacienteId', pacienteId);
+    formData.append('inbody_file', file); // Nombre correcto del campo
+    formData.append('paciente_id', pacienteId); // Nombre correcto del campo
 
-    return await api.post('/mediciones/ocr/procesar', formData, {
+    return await api.post('/mediciones/inbody', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Vista previa de OCR sin guardar (NUEVO MÉTODO)
+  previsualizarInBody: async (file) => {
+    const formData = new FormData();
+    formData.append('inbody_file', file);
+
+    return await api.post('/mediciones/inbody/preview', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -85,27 +139,41 @@ export const medicionesService = {
   },
 
   // Mapear datos OCR a formato de formulario
-  mapearDatosOCR: (ocrData) => {
-    return {
-      // Campos principales
-      peso: ocrData.peso || '',
-      altura: ocrData.altura || '',
-      imc: ocrData.imc || '',
-      grasa_corporal: ocrData.grasa_corporal_porcentaje || '',
-      grasa_corporal_kg: ocrData.grasa_corporal_kg || '',
-      musculo: ocrData.masa_muscular || '',
-      puntuacion_corporal: ocrData.puntuacion_corporal || '',
+  mapearDatosOCR: (responseData) => {
+    console.log('🔍 mapearDatosOCR - entrada:', responseData);
+    
+    // La respuesta del backend tiene esta estructura:
+    // { medicion: {...}, confianza: number, archivo_original: string }
+    
+    const medicion = responseData.medicion || {};
+    const confianza = responseData.confianza || 0;
+    
+    console.log('🔍 mapearDatosOCR - medicion extraida:', medicion);
+    console.log('🔍 mapearDatosOCR - confianza:', confianza);
+    
+    const result = {
+      // Campos principales desde la medición creada
+      peso: medicion.peso || '',
+      altura: medicion.altura || '',
+      imc: medicion.imc || '',
+      grasa_corporal: medicion.grasa_corporal || '',
+      grasa_corporal_kg: medicion.grasa_corporal_kg || '',
+      musculo: medicion.musculo || '',
+      puntuacion_corporal: medicion.puntuacion_corporal || '',
       
       // Fecha y hora
-      fecha_medicion: ocrData.fecha_hora_completa || new Date().toISOString().slice(0, 16),
+      fecha_medicion: medicion.fecha_medicion || new Date().toISOString().slice(0, 16),
       
       // Metadatos
       tipo: 'inbody',
-      confianza_ocr: Math.round(ocrData.confianza_ocr || 0),
+      confianza_ocr: Math.round(confianza),
       
-      // Observaciones con datos de cambios
-      observaciones: this.generarObservacionesOCR(ocrData)
+      // Observaciones
+      observaciones: medicion.observaciones || `Medición automática InBody H30 (Confianza: ${Math.round(confianza)}%)`
     };
+    
+    console.log('🔍 mapearDatosOCR - resultado final:', result);
+    return result;
   },
 
   // Generar observaciones automáticas desde OCR
