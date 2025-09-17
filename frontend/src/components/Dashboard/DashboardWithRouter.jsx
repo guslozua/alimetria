@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -60,6 +60,9 @@ import NotificacionesPage from '../../pages/NotificacionesPage';
 // Importar componente de notificaciones
 import NotificacionDropdown from '../Notificaciones/NotificacionDropdown';
 
+// Importar panel de administración
+import PanelAdministracion from '../Administracion/PanelAdministracion';
+
 
 
 const Dashboard = () => {
@@ -118,9 +121,9 @@ const Dashboard = () => {
       available: isAdmin() || isNutricionista() || isSecretario()
     },
     {
-      title: 'Configuración',
+      title: 'Administración',
       icon: <SettingsIcon />,
-      path: '/configuracion',
+      path: '/administracion',
       available: isAdmin()
     }
   ];
@@ -143,8 +146,8 @@ const Dashboard = () => {
     if (path.startsWith('/mediciones')) return 'Mediciones';
     if (path.startsWith('/reportes')) return 'Reportes';
     if (path.startsWith('/agenda')) return 'Agenda';
+    if (path.startsWith('/administracion')) return 'Administración';
     if (path.startsWith('/notificaciones')) return 'Notificaciones';
-    if (path.startsWith('/configuracion')) return 'Configuración';
     
     return 'Alimetria';
   };
@@ -237,13 +240,13 @@ const Dashboard = () => {
                   {item.path === '/mediciones' && 'Mediciones manuales y automáticas InBody'}
                   {item.path === '/reportes' && 'Generar reportes PDF de evolución y estadísticas'}
                   {item.path === '/agenda' && 'Gestión de citas y calendario'}
-                  {item.path === '/configuracion' && 'Usuarios, roles y configuraciones'}
+                  {item.path === '/administracion' && 'Usuarios, roles, consultorios y configuraciones'}
                 </Typography>
                 <CustomButton
                   variant="contained"
                   size="small"
-                  color={['/pacientes', '/mediciones', '/reportes', '/agenda'].includes(item.path) ? 'primary' : 'default'}
-                  disabled={!['/pacientes', '/mediciones', '/reportes', '/agenda'].includes(item.path)}
+                  color={['/pacientes', '/mediciones', '/reportes', '/agenda', '/administracion'].includes(item.path) ? 'primary' : 'default'}
+                  disabled={!['/pacientes', '/mediciones', '/reportes', '/agenda', '/administracion'].includes(item.path)}
                 >
                   {['/pacientes', '/mediciones', '/reportes', '/agenda'].includes(item.path) ? 'Abrir Módulo' : 'Próximamente'}
                 </CustomButton>
@@ -415,11 +418,14 @@ const Dashboard = () => {
             {/* Rutas de agenda */}
             <Route path="/agenda" element={<AgendaPage />} />
             
+            {/* Rutas de administración */}
+            <Route path="/administracion/*" element={<PanelAdministracion />} />
+            
             {/* Rutas de notificaciones */}
             <Route path="/notificaciones" element={<NotificacionesPage />} />
             
-            {/* Rutas futuras */}
-            <Route path="/configuración" element={<ModuloEnDesarrollo titulo="Configuración del Sistema" />} />
+            {/* Ruta futura redirigida a administración */}
+            <Route path="/configuración" element={<Navigate to="/administracion" replace />} />
           </Routes>
         </Container>
       </Box>

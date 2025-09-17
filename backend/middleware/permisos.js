@@ -170,8 +170,12 @@ const verificarAccesoPaciente = (req, res, next) => {
   });
 };
 
+// Función auxiliar para validar permisos
+const validarPermisos = verificarPermisos;
+
 module.exports = {
   verificarPermisos,
+  validarPermisos,  // Alias por compatibilidad
   requireAdmin,
   verificarAccesoReportes,
   verificarAccesoPaciente,

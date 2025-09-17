@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
-const Rol = require('../models/Rol');
 
 // Middleware para verificar token JWT
 const authenticateToken = async (req, res, next) => {
@@ -84,6 +83,30 @@ const requireRole = (...allowedRoles) => {
   };
 };
 
+// Función auxiliar para verificar permisos
+const hasPermission = (userPermisos, modulo, accion) => {
+  try {
+    if (!userPermisos || typeof userPermisos !== 'object') {
+      return false;
+    }
+
+    // Si es administrador, tiene todos los permisos
+    if (userPermisos.usuarios && userPermisos.usuarios.includes('eliminar')) {
+      return true;
+    }
+
+    // Verificar permiso específico
+    if (userPermisos[modulo] && Array.isArray(userPermisos[modulo])) {
+      return userPermisos[modulo].includes(accion);
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error verificando permisos:', error);
+    return false;
+  }
+};
+
 // Middleware para verificar permisos específicos
 const requirePermission = (modulo, accion) => {
   return (req, res, next) => {
@@ -100,9 +123,9 @@ const requirePermission = (modulo, accion) => {
     }
 
     // Verificar si tiene el permiso específico
-    const hasPermission = Rol.hasPermission(req.user.permisos, modulo, accion);
+    const hasPermissionResult = hasPermission(req.user.permisos, modulo, accion);
     
-    if (!hasPermission) {
+    if (!hasPermissionResult) {
       return res.status(403).json({
         success: false,
         message: `No tienes permisos para ${accion} en ${modulo}`
@@ -131,7 +154,7 @@ const requireOwnData = (userIdParam = 'id') => {
     }
 
     // Los usuarios solo pueden acceder a sus propios datos
-    if (req.user.userId !== requestedUserId) {
+    if (req.user.id !== requestedUserId) {
       return res.status(403).json({
         success: false,
         message: 'Solo puedes acceder a tus propios datos'
@@ -140,94 +163,6 @@ const requireOwnData = (userIdParam = 'id') => {
 
     next();
   };
-};
-
-// Middleware para verificar acceso a pacientes específicos
-const requirePatientAccess = async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no autenticado'
-      });
-    }
-
-    const pacienteId = parseInt(req.params.pacienteId || req.params.id);
-
-    // Administradores y nutricionistas pueden acceder a todos los pacientes
-    if (['administrador', 'nutricionista'].includes(req.user.rol)) {
-      return next();
-    }
-
-    // Secretarios pueden ver pacientes pero no modificar datos sensibles
-    if (req.user.rol === 'secretario') {
-      // Solo lectura para secretarios
-      if (req.method !== 'GET') {
-        return res.status(403).json({
-          success: false,
-          message: 'Los secretarios solo pueden consultar información'
-        });
-      }
-      return next();
-    }
-
-    // Pacientes solo pueden acceder a sus propios datos
-    if (req.user.rol === 'paciente') {
-      // Verificar que el usuario es el mismo paciente
-      const Usuario = require('../models/Usuario');
-      const user = await Usuario.findById(req.user.userId);
-      
-      if (user.id !== pacienteId) {
-        return res.status(403).json({
-          success: false,
-          message: 'Solo puedes acceder a tus propios datos'
-        });
-      }
-    }
-
-    next();
-  } catch (error) {
-    console.error('Error verificando acceso a paciente:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
-  }
-};
-
-// Middleware para verificar que el usuario pertenece al mismo consultorio
-const requireSameConsultorio = async (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no autenticado'
-      });
-    }
-
-    // Los administradores pueden acceder a todos los consultorios
-    if (req.user.rol === 'administrador') {
-      return next();
-    }
-
-    // Verificar que el recurso pertenece al mismo consultorio del usuario
-    const consultoirioId = req.params.consultoirioId || req.body.consultorio_id;
-    
-    if (consultoirioId && req.user.consultoirioId !== parseInt(consultoirioId)) {
-      return res.status(403).json({
-        success: false,
-        message: 'No puedes acceder a recursos de otros consultorios'
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Error verificando consultorio:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
-  }
 };
 
 // Middleware opcional de autenticación (no falla si no hay token)
@@ -246,12 +181,12 @@ const optionalAuth = async (req, res, next) => {
     
     if (user) {
       req.user = {
-        userId: user.id,
+        id: user.id,
         email: user.email,
         rol: user.rol_nombre,
         rolId: user.rol_id,
         permisos: typeof user.permisos === 'string' ? JSON.parse(user.permisos) : user.permisos,
-        consultoirioId: user.consultorio_id
+        consultorioId: user.consultorio_id
       };
     } else {
       req.user = null;
@@ -265,11 +200,11 @@ const optionalAuth = async (req, res, next) => {
 };
 
 module.exports = {
+  auth: authenticateToken,  // Agregar alias
   authenticateToken,
   requireRole,
   requirePermission,
   requireOwnData,
-  requirePatientAccess,
-  requireSameConsultorio,
-  optionalAuth
+  optionalAuth,
+  hasPermission
 };
