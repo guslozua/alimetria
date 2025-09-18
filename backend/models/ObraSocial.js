@@ -6,32 +6,42 @@ class ObraSocial {
     this.nombre = data.nombre;
     this.codigo = data.codigo;
     this.descripcion = data.descripcion;
-    this.telefono = data.telefono;
-    this.email = data.email;
+    this.telefono = data.telefono;           // Campo real de la BD
+    this.email = data.email;                 // Campo real de la BD
+    this.contacto_telefono = data.telefono;  // Alias para compatibilidad
+    this.contacto_email = data.email;        // Alias para compatibilidad
     this.sitio_web = data.sitio_web;
     this.activo = data.activo !== undefined ? data.activo : true;
     this.fecha_creacion = data.fecha_creacion;
     this.fecha_actualizacion = data.fecha_actualizacion;
+    // Agregar contador de pacientes si viene del backend
+    this.pacientes_count = data.pacientes_count || 0;
   }
 
   // Obtener todas las obras sociales activas
   static async findAll(filters = {}) {
     try {
       let query = `
-        SELECT * FROM obras_sociales 
-        WHERE activo = TRUE
+        SELECT os.*, 
+               COUNT(p.id) as pacientes_count
+        FROM obras_sociales os
+        LEFT JOIN pacientes p ON os.id = p.obra_social_id AND p.activo = TRUE
+        WHERE os.activo = TRUE
       `;
       const values = [];
 
       // Filtro por búsqueda
       if (filters.search) {
-        query += ' AND (nombre LIKE ? OR codigo LIKE ?)';
+        query += ' AND (os.nombre LIKE ? OR os.codigo LIKE ?)';
         const searchTerm = `%${filters.search}%`;
         values.push(searchTerm, searchTerm);
       }
 
+      // Agrupar por obra social
+      query += ' GROUP BY os.id';
+
       // Ordenamiento
-      const orderBy = filters.orderBy || 'nombre';
+      const orderBy = filters.orderBy || 'os.nombre';
       const orderDirection = filters.orderDirection || 'ASC';
       query += ` ORDER BY ${orderBy} ${orderDirection}`;
 
@@ -113,8 +123,8 @@ class ObraSocial {
         obraSocialData.nombre,
         obraSocialData.codigo || null,
         obraSocialData.descripcion || null,
-        obraSocialData.telefono || null,
-        obraSocialData.email || null,
+        obraSocialData.contacto_telefono || obraSocialData.telefono || null,
+        obraSocialData.contacto_email || obraSocialData.email || null,
         obraSocialData.sitio_web || null
       ];
       
@@ -165,6 +175,17 @@ class ObraSocial {
           values.push(updateData[field]);
         }
       });
+      
+      // Manejar aliases del frontend
+      if (updateData.contacto_telefono !== undefined) {
+        fields.push('telefono = ?');
+        values.push(updateData.contacto_telefono);
+      }
+      
+      if (updateData.contacto_email !== undefined) {
+        fields.push('email = ?');
+        values.push(updateData.contacto_email);
+      }
 
       if (fields.length === 0) {
         throw new Error('No hay campos para actualizar');
@@ -247,7 +268,11 @@ class ObraSocial {
       descripcion: this.descripcion,
       telefono: this.telefono,
       email: this.email,
-      activo: this.activo
+      contacto_telefono: this.telefono,  // Alias para el frontend
+      contacto_email: this.email,        // Alias para el frontend
+      sitio_web: this.sitio_web,
+      activo: this.activo,
+      pacientes_count: this.pacientes_count || 0
     };
   }
 }

@@ -460,7 +460,7 @@ const GestionRolesPermisos = () => {
                     </TableCell>
                     <TableCell align="center">
                       <Switch
-                        checked={rol.activo}
+                        checked={Boolean(rol.activo)}
                         onChange={() => toggleActivo(rol)}
                         size="small"
                         disabled={rol.nombre === 'administrador'} // No permitir desactivar admin

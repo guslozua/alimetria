@@ -8,7 +8,7 @@ class ObraSocialService {
   static async getAll(params = {}) {
     try {
       const response = await api.get(API_BASE_URL, { params });
-      return response.data;
+      return response.data; // Ya devuelve el objeto completo con success
     } catch (error) {
       throw this.handleError(error);
     }
@@ -63,6 +63,20 @@ class ObraSocialService {
       const response = await api.delete(`${API_BASE_URL}/${id}`);
       return response.data;
     } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Obtener estadísticas globales
+  static async getEstadisticasGlobales() {
+    try {
+      console.log('🔍 Llamando al endpoint de estadísticas globales...');
+      const response = await api.get(`${API_BASE_URL}/estadisticas-globales`);
+      console.log('📡 Respuesta del servicio API:', response);
+      console.log('📦 Data de la respuesta:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error en servicio getEstadisticasGlobales:', error);
       throw this.handleError(error);
     }
   }

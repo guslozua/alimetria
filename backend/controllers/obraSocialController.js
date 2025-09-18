@@ -1,10 +1,13 @@
 const { validationResult } = require('express-validator');
 const ObraSocial = require('../models/ObraSocial');
+const { executeQuery } = require('../config/database');
 
 class ObraSocialController {
   // Obtener todas las obras sociales
   static async getAll(req, res) {
     try {
+      console.log('🏥 Controller getAll - Query params:', req.query);
+      
       const {
         page = 1,
         limit = 50,
@@ -15,10 +18,13 @@ class ObraSocialController {
 
       // Para listado simple sin paginación (usado en selects)
       if (req.query.simple === 'true') {
+        console.log('📋 Modo simple solicitado');
         const obrasSociales = await ObraSocial.findAll({
           orderBy: 'nombre',
           orderDirection: 'ASC'
         });
+        
+        console.log('🏥 Obras sociales encontradas (simple):', obrasSociales.length);
 
         return res.json({
           success: true,
@@ -28,6 +34,8 @@ class ObraSocialController {
         });
       }
 
+      console.log('📋 Modo paginado solicitado - page:', page, 'limit:', limit);
+      
       // Calcular offset para paginación
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -38,8 +46,11 @@ class ObraSocialController {
         orderBy,
         orderDirection: orderDirection.toUpperCase()
       };
+      
+      console.log('🔍 Filtros aplicados:', filters);
 
       const obrasSociales = await ObraSocial.findAll(filters);
+      console.log('🏥 Obras sociales encontradas:', obrasSociales.length);
 
       // Obtener total para paginación (sin límite)
       const totalFilters = { ...filters };
@@ -47,6 +58,8 @@ class ObraSocialController {
       delete totalFilters.offset;
       const totalObrasSociales = await ObraSocial.findAll(totalFilters);
       const total = totalObrasSociales.length;
+      
+      console.log('📊 Total de obras sociales:', total);
 
       const response = {
         success: true,
@@ -60,6 +73,12 @@ class ObraSocialController {
           }
         }
       };
+      
+      console.log('📎 Response final:', {
+        success: response.success,
+        obrasSocialesCount: response.data.obrasSociales.length,
+        pagination: response.data.pagination
+      });
 
       res.json(response);
 
@@ -297,34 +316,95 @@ class ObraSocialController {
   static async search(req, res) {
     try {
       const { q } = req.query;
-
-      if (!q || q.length < 2) {
+      
+      if (!q || q.trim().length < 1) {
         return res.json({
           success: true,
           data: { obrasSociales: [] }
         });
       }
-
+      
       const filters = {
-        search: q,
-        limit: 10
+        search: q.trim(),
+        limit: 20 // Limitar resultados de búsqueda
       };
-
+      
       const obrasSociales = await ObraSocial.findAll(filters);
-
+      
       res.json({
         success: true,
-        data: { 
-          obrasSociales: obrasSociales.map(os => ({
-            id: os.id,
-            nombre: os.nombre,
-            codigo: os.codigo
-          }))
+        data: {
+          obrasSociales: obrasSociales.map(os => os.toListSummary())
         }
       });
-
+      
     } catch (error) {
       console.error('Error en búsqueda de obras sociales:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Obtener estadísticas globales de obras sociales
+  static async getEstadisticasGlobales(req, res) {
+    try {
+      console.log('📊 Obteniendo estadísticas globales de obras sociales...');
+      
+      // Estadísticas de obras sociales
+      const statsQuery = `
+        SELECT 
+          COUNT(*) as total_obras_sociales,
+          COUNT(CASE WHEN (SELECT COUNT(*) FROM pacientes p WHERE p.obra_social_id = os.id AND p.activo = TRUE) > 0 THEN 1 END) as obras_con_pacientes,
+          COUNT(CASE WHEN (SELECT COUNT(*) FROM pacientes p WHERE p.obra_social_id = os.id AND p.activo = TRUE) = 0 THEN 1 END) as obras_sin_pacientes
+        FROM obras_sociales os
+        WHERE os.activo = TRUE
+      `;
+      
+      // Estadísticas de pacientes
+      const pacientesQuery = `
+        SELECT 
+          COUNT(*) as total_pacientes,
+          COUNT(CASE WHEN os.codigo = 'PARTICULAR' OR os.codigo = 'PART' THEN 1 END) as pacientes_particulares,
+          COUNT(CASE WHEN os.codigo != 'PARTICULAR' AND os.codigo != 'PART' THEN 1 END) as pacientes_con_obra_social
+        FROM pacientes p
+        LEFT JOIN obras_sociales os ON p.obra_social_id = os.id
+        WHERE p.activo = TRUE
+      `;
+      
+      const statsResult = await executeQuery(statsQuery);
+      const pacientesResult = await executeQuery(pacientesQuery);
+      
+      console.log('📈 Estadísticas de obras sociales:', statsResult[0]);
+      console.log('🏥 Estadísticas de pacientes:', pacientesResult[0]);
+      
+      const estadisticas = {
+        obras_sociales: {
+          total: statsResult[0].total_obras_sociales,
+          con_pacientes: statsResult[0].obras_con_pacientes,
+          sin_pacientes: statsResult[0].obras_sin_pacientes
+        },
+        pacientes: {
+          total: pacientesResult[0].total_pacientes,
+          particulares: pacientesResult[0].pacientes_particulares,
+          con_obra_social: pacientesResult[0].pacientes_con_obra_social,
+          porcentaje_particulares: pacientesResult[0].total_pacientes > 0 
+            ? Math.round((pacientesResult[0].pacientes_particulares / pacientesResult[0].total_pacientes) * 100)
+            : 0
+        }
+      };
+      
+      console.log('✅ Estadísticas finales:', estadisticas);
+      
+      res.json({
+        success: true,
+        data: estadisticas
+      });
+      
+    } catch (error) {
+      console.error('❌ Error obteniendo estadísticas globales:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',

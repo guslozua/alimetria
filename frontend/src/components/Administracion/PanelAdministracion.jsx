@@ -16,7 +16,8 @@ import {
   Security as SecurityIcon,
   Settings as SettingsIcon,
   Business as BusinessIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  LocalHospital as HospitalIcon
 } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 
@@ -24,6 +25,8 @@ import { useSnackbar } from 'notistack';
 import GestionUsuarios from './GestionUsuarios';
 import GestionRolesPermisos from './GestionRolesPermisos';
 import ConfiguracionSistema from './ConfiguracionSistema';
+import GestionConsultorios from './GestionConsultorios';
+import GestionObrasSociales from './GestionObrasSociales';
 
 // Importar servicios
 import { usuarioService, rolService, consultorioService, configuracionService } from '../../services/administracion';
@@ -55,7 +58,12 @@ const PanelAdministracion = () => {
     {
       label: 'Consultorios',
       icon: <BusinessIcon />,
-      component: <div>Gestión de Consultorios (En desarrollo)</div>
+      component: <GestionConsultorios />
+    },
+    {
+      label: 'Obras Sociales',
+      icon: <HospitalIcon />,
+      component: <GestionObrasSociales />
     },
     {
       label: 'Configuración',

@@ -32,6 +32,7 @@ const authenticateToken = async (req, res, next) => {
     req.user = {
       id: user.id,  // Cambiado de userId a id
       email: user.email,
+      rol_nombre: user.rol_nombre,  // Agregar rol_nombre
       rol: user.rol_nombre,
       rolId: user.rol_id,
       permisos: typeof user.permisos === 'string' ? JSON.parse(user.permisos) : user.permisos,
@@ -183,6 +184,7 @@ const optionalAuth = async (req, res, next) => {
       req.user = {
         id: user.id,
         email: user.email,
+        rol_nombre: user.rol_nombre,  // Agregar rol_nombre
         rol: user.rol_nombre,
         rolId: user.rol_id,
         permisos: typeof user.permisos === 'string' ? JSON.parse(user.permisos) : user.permisos,

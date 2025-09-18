@@ -45,6 +45,9 @@ router.use(authenticateToken);
 // GET /api/obras-sociales - Obtener todas las obras sociales
 router.get('/', ObraSocialController.getAll);
 
+// GET /api/obras-sociales/estadisticas-globales - Obtener estadísticas globales
+router.get('/estadisticas-globales', ObraSocialController.getEstadisticasGlobales);
+
 // GET /api/obras-sociales/search - Búsqueda rápida
 router.get('/search', ObraSocialController.search);
 
