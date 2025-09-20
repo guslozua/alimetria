@@ -500,6 +500,73 @@ class ConfiguracionController {
     }
   }
 
+  // Probar configuración de email
+  async probarEmail(req, res) {
+    try {
+      // Verificar permisos de admin
+      if (req.user.rol_nombre !== 'administrador') {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para probar configuraciones de email'
+        });
+      }
+      
+      const { email_destino } = req.body;
+      
+      if (!email_destino) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email de destino es requerido'
+        });
+      }
+      
+      // Validar formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email_destino)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Formato de email inválido'
+        });
+      }
+      
+      // Importar emailService
+      const emailService = require('../utils/emailService');
+      
+      // Enviar email de prueba
+      const resultado = await emailService.enviarEmailPrueba(email_destino);
+      
+      if (resultado.disabled) {
+        return res.json({
+          success: false,
+          message: 'Envío de emails está deshabilitado en la configuración del sistema',
+          disabled: true
+        });
+      }
+      
+      if (resultado.success) {
+        return res.json({
+          success: true,
+          message: `Email de prueba enviado exitosamente a ${email_destino}`,
+          messageId: resultado.messageId
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: resultado.message || 'Error enviando email de prueba',
+          error: resultado.error
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error en prueba de email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: error.message
+      });
+    }
+  }
+
   // Obtener categorías disponibles
   async obtenerCategorias(req, res) {
     try {

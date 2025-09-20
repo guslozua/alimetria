@@ -13,6 +13,9 @@ router.use(auth);
 // Obtener categorías disponibles
 router.get('/categorias', requireAdmin, configuracionController.obtenerCategorias);
 
+// Probar configuración de email (solo admin)
+router.post('/probar-email', requireAdmin, configuracionController.probarEmail);
+
 // Obtener todas las configuraciones
 router.get('/', requireAdmin, configuracionController.obtenerConfiguraciones);
 

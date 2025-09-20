@@ -97,6 +97,7 @@ app.use('/api/test-pdf', require('./routes/test-pdf')); // Rutas de test para PD
 app.use('/api/citas', require('./routes/citas'));
 app.use('/api/citas-test', require('./routes/citas-test')); // Rutas de prueba para citas
 app.use('/api/notificaciones', require('./routes/notificaciones'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 // Rutas de administración
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/roles', require('./routes/roles'));

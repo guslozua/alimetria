@@ -12,7 +12,13 @@ import {
   Tabs,
   Tab,
   Breadcrumbs,
-  Link
+  Link,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer
 } from '@mui/material';
 import { 
   ArrowBack, 
@@ -20,6 +26,7 @@ import {
   Assessment,
   Home
 } from '@mui/icons-material';
+import { PageTitle, SectionTitle, MetaText, StyledTable } from '../components/Common/TypographyHelpers';
 
 import FiltrosReporte from '../components/Reportes/FiltrosReporte';
 import EstadisticasResumen from '../components/Reportes/EstadisticasResumen';
@@ -125,12 +132,12 @@ const Reportes = () => {
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Box display="flex" justifyContent="between" alignItems="center" mb={2}>
           <Box>
-            <Typography variant="h4" gutterBottom>
-              📊 Sistema de Reportes
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Genere reportes detallados de evolución nutricional y estadísticas del consultorio
-            </Typography>
+            <PageTitle 
+              icon={<Assessment />}
+              subtitle="Genere reportes detallados de evolución nutricional y estadísticas del consultorio"
+            >
+              Sistema de Reportes
+            </PageTitle>
           </Box>
           
           {pacienteId && (
@@ -413,48 +420,58 @@ const ReporteConsolidado = ({ datosReporte, onDatosObtenidos }) => {
 const TablaMediciones = ({ mediciones }) => {
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Historial de Mediciones
-      </Typography>
+      <SectionTitle>Historial de Mediciones</SectionTitle>
       
-      <Box sx={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <TableContainer sx={{ overflowX: 'auto' }}>
+        <StyledTable>
           <thead>
-            <tr style={{ backgroundColor: '#f5f5f5' }}>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>Fecha</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>Peso (kg)</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>IMC</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>Grasa (%)</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>Músculo (kg)</th>
-              <th style={{ padding: '12px', border: '1px solid #ddd' }}>Observaciones</th>
+            <tr>
+              <th>Fecha</th>
+              <th>Peso (kg)</th>
+              <th>IMC</th>
+              <th>Grasa (%)</th>
+              <th>Músculo (kg)</th>
+              <th>Observaciones</th>
             </tr>
           </thead>
           <tbody>
             {mediciones.map((medicion, index) => (
-              <tr key={medicion.id} style={{ backgroundColor: index % 2 === 0 ? '#fafafa' : 'white' }}>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {new Date(medicion.fecha_medicion).toLocaleDateString('es-ES')}
+              <tr key={medicion.id}>
+                <td>
+                  <Typography variant="body2">
+                    {new Date(medicion.fecha_medicion).toLocaleDateString('es-ES')}
+                  </Typography>
                 </td>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {medicion.peso || '-'}
+                <td>
+                  <Typography variant="body2">
+                    {medicion.peso || '-'}
+                  </Typography>
                 </td>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {medicion.imc || '-'}
+                <td>
+                  <Typography variant="body2">
+                    {medicion.imc || '-'}
+                  </Typography>
                 </td>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {medicion.grasa_corporal || '-'}
+                <td>
+                  <Typography variant="body2">
+                    {medicion.grasa_corporal || '-'}
+                  </Typography>
                 </td>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {medicion.musculo || '-'}
+                <td>
+                  <Typography variant="body2">
+                    {medicion.musculo || '-'}
+                  </Typography>
                 </td>
-                <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-                  {medicion.observaciones || '-'}
+                <td>
+                  <Typography variant="body2">
+                    {medicion.observaciones || '-'}
+                  </Typography>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
-      </Box>
+        </StyledTable>
+      </TableContainer>
     </Paper>
   );
 };

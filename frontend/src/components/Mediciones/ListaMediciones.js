@@ -28,6 +28,7 @@ import {
   History as HistoryIcon,
   CameraAlt as InBodyIcon
 } from '@mui/icons-material';
+import { SectionTitle, InfoText, MetaText } from '../Common/TypographyHelpers';
 import { medicionesService } from '../../services/medicionesService';
 import { formatearFecha, formatearNumero } from '../../utils/formatters';
 

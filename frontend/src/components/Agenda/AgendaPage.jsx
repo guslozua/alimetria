@@ -185,7 +185,7 @@ const AgendaPage = () => {
       {/* Header */}
       <Box mb={3}>
         <Typography variant="h4" component="h1" gutterBottom>
-          📅 Agenda de Citas
+          Agenda de Citas
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
           Gestión completa de citas y calendario

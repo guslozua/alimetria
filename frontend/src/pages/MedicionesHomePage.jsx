@@ -14,6 +14,7 @@ import {
   Assessment as AssessmentIcon,
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
+import { PageTitle, SectionTitle, InfoText, MetaText } from '../components/Common/TypographyHelpers';
 
 const MedicionesHome = () => {
   const navigate = useNavigate();
@@ -33,19 +34,20 @@ const MedicionesHome = () => {
         >
           Volver al Dashboard
         </Button>
-        <Typography variant="h4">
+        <PageTitle 
+          icon={<AssessmentIcon />}
+          subtitle="Gestiona las mediciones de tus pacientes de forma eficiente"
+        >
           Módulo de Mediciones
-        </Typography>
+        </PageTitle>
       </Box>
 
       {/* Información */}
       <Paper elevation={1} sx={{ p: 3, mb: 4, backgroundColor: '#e3f2fd' }}>
-        <Typography variant="h6" gutterBottom>
-          Gestión de Mediciones
-        </Typography>
-        <Typography variant="body1">
+        <SectionTitle level="h6">Gestión de Mediciones</SectionTitle>
+        <InfoText>
           Para acceder a las mediciones, ve al detalle de un paciente y selecciona la pestaña "Mediciones".
-        </Typography>
+        </InfoText>
       </Paper>
 
       {/* Instrucciones */}
@@ -55,11 +57,11 @@ const MedicionesHome = () => {
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
                 <AssessmentIcon color="primary" sx={{ mr: 2, fontSize: 40 }} />
-                <Typography variant="h6">Ver Mediciones</Typography>
+                <SectionTitle level="h6" sx={{ mb: 0 }}>Ver Mediciones</SectionTitle>
               </Box>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <MetaText sx={{ mb: 3 }}>
                 Para ver las mediciones de un paciente, ve a la lista de pacientes y selecciona "Ver detalle".
-              </Typography>
+              </MetaText>
               <Button
                 variant="contained"
                 onClick={() => navigate('/pacientes')}
@@ -76,11 +78,11 @@ const MedicionesHome = () => {
             <CardContent>
               <Box display="flex" alignItems="center" mb={2}>
                 <AddIcon color="success" sx={{ mr: 2, fontSize: 40 }} />
-                <Typography variant="h6">Nueva Medición</Typography>
+                <SectionTitle level="h6" sx={{ mb: 0 }}>Nueva Medición</SectionTitle>
               </Box>
-              <Typography variant="body2" color="text.secondary" mb={3}>
+              <MetaText sx={{ mb: 3 }}>
                 Para crear una nueva medición, primero selecciona un paciente y luego usa el botón "Nueva Medición".
-              </Typography>
+              </MetaText>
               <Button
                 variant="outlined"
                 onClick={() => navigate('/pacientes')}
@@ -95,24 +97,22 @@ const MedicionesHome = () => {
 
       {/* Flujo de trabajo */}
       <Paper elevation={1} sx={{ p: 3, mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Flujo de Trabajo
-        </Typography>
+        <SectionTitle level="h6">Flujo de Trabajo</SectionTitle>
         <Box sx={{ pl: 2 }}>
-          <Typography variant="body2" gutterBottom>
+          <InfoText gutterBottom>
             1. Ve a <strong>Pacientes</strong> → Selecciona un paciente → <strong>Ver detalle</strong>
-          </Typography>
-          <Typography variant="body2" gutterBottom>
+          </InfoText>
+          <InfoText gutterBottom>
             2. En el detalle del paciente, selecciona la pestaña <strong>"Mediciones"</strong>
-          </Typography>
-          <Typography variant="body2" gutterBottom>
+          </InfoText>
+          <InfoText gutterBottom>
             3. Desde ahí podrás:
-          </Typography>
+          </InfoText>
           <Box sx={{ pl: 2 }}>
-            <Typography variant="body2">• Crear nuevas mediciones</Typography>
-            <Typography variant="body2">• Ver mediciones existentes</Typography>
-            <Typography variant="body2">• Editar mediciones</Typography>
-            <Typography variant="body2">• Ver gráficos de evolución</Typography>
+            <MetaText>• Crear nuevas mediciones</MetaText>
+            <MetaText>• Ver mediciones existentes</MetaText>
+            <MetaText>• Editar mediciones</MetaText>
+            <MetaText>• Ver gráficos de evolución</MetaText>
           </Box>
         </Box>
       </Paper>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -28,9 +29,12 @@ import {
   FilterList as FilterIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
+import { PageTitle, SectionTitle, StatText, MetaText } from '../components/Common/TypographyHelpers';
+import { useNotifications } from '../hooks/useNotifications';
 import NotificacionService from '../services/notificacionService';
 
 const NotificacionesPage = () => {
+  const navigate = useNavigate();
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtros, setFiltros] = useState({
@@ -47,6 +51,9 @@ const NotificacionesPage = () => {
     noLeidas: 0,
     porTipo: {}
   });
+
+  // Hook para notificaciones del header
+  const { refreshCount, markAsRead: markAsReadInHeader, markAllAsRead: markAllAsReadInHeader } = useNotifications();
 
   // Cargar notificaciones
   const cargarNotificaciones = async () => {
@@ -105,6 +112,10 @@ const NotificacionesPage = () => {
         )
       );
       setStats(prev => ({ ...prev, noLeidas: Math.max(0, prev.noLeidas - 1) }));
+      
+      // Actualizar contador del header
+      markAsReadInHeader(notificacionId);
+      
       // Recargar notificaciones para asegurar sincronización
       await cargarNotificaciones();
       console.log('Notificación marcada como leída');
@@ -142,6 +153,10 @@ const NotificacionesPage = () => {
         }))
       );
       setStats(prev => ({ ...prev, noLeidas: 0 }));
+      
+      // Actualizar contador del header
+      markAllAsReadInHeader();
+      
       // Recargar notificaciones para asegurar sincronización
       await cargarNotificaciones();
       console.log('Todas las notificaciones marcadas como leídas');
@@ -154,12 +169,31 @@ const NotificacionesPage = () => {
     <Container maxWidth="lg">
       <Box sx={{ py: 3 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <NotificationsIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="h4" component="h1">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => navigate('/')}
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: 'action.hover'
+                  }
+                }}
+              >
+                ← Volver al Dashboard
+              </Button>
+            </Box>
+            <PageTitle 
+              icon={<NotificationsIcon />}
+              subtitle="Centro de notificaciones y alertas del sistema"
+            >
               Notificaciones
-            </Typography>
+            </PageTitle>
           </Box>
           
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -187,36 +221,33 @@ const NotificacionesPage = () => {
           <Grid item xs={12} sm={4}>
             <Card>
               <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Total de Notificaciones
-                </Typography>
-                <Typography variant="h4">
-                  {stats.total}
-                </Typography>
+                <StatText 
+                  value={stats.total}
+                  label="Total de Notificaciones"
+                  color="primary"
+                />
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} sm={4}>
             <Card>
               <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  No Leídas
-                </Typography>
-                <Typography variant="h4" color="error">
-                  {stats.noLeidas}
-                </Typography>
+                <StatText 
+                  value={stats.noLeidas}
+                  label="No Leídas"
+                  color="error"
+                />
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} sm={4}>
             <Card>
               <CardContent>
-                <Typography color="textSecondary" gutterBottom>
-                  Leídas
-                </Typography>
-                <Typography variant="h4" color="success.main">
-                  {stats.leidas}
-                </Typography>
+                <StatText 
+                  value={stats.leidas}
+                  label="Leídas"
+                  color="success"
+                />
               </CardContent>
             </Card>
           </Grid>
@@ -224,39 +255,46 @@ const NotificacionesPage = () => {
 
         {/* Filtros */}
         <Paper sx={{ p: 2, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <FilterIcon />
-            <Typography variant="h6">Filtros</Typography>
-            
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>Tipo</InputLabel>
-              <Select
-                value={filtros.tipo}
-                label="Tipo"
-                onChange={(e) => handleFiltroChange('tipo', e.target.value)}
-              >
-                <MenuItem value="">Todos</MenuItem>
-                <MenuItem value="cita_recordatorio">Recordatorios</MenuItem>
-                <MenuItem value="medicion_pendiente">Mediciones</MenuItem>
-                <MenuItem value="cumpleanos">Cumpleaños</MenuItem>
-                <MenuItem value="sistema">Sistema</MenuItem>
-                <MenuItem value="alerta">Alertas</MenuItem>
-              </Select>
-            </FormControl>
-            
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={filtros.leidas}
-                label="Estado"
-                onChange={(e) => handleFiltroChange('leidas', e.target.value)}
-              >
-                <MenuItem value="">Todas</MenuItem>
-                <MenuItem value="false">No leídas</MenuItem>
-                <MenuItem value="true">Leídas</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+          <SectionTitle 
+            level="h6"
+            action={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControl sx={{ minWidth: 120 }}>
+                  <InputLabel>Tipo</InputLabel>
+                  <Select
+                    value={filtros.tipo}
+                    label="Tipo"
+                    onChange={(e) => handleFiltroChange('tipo', e.target.value)}
+                  >
+                    <MenuItem value="">Todos</MenuItem>
+                    <MenuItem value="cita_recordatorio">Recordatorios</MenuItem>
+                    <MenuItem value="medicion_pendiente">Mediciones</MenuItem>
+                    <MenuItem value="cumpleanos">Cumpleaños</MenuItem>
+                    <MenuItem value="sistema">Sistema</MenuItem>
+                    <MenuItem value="alerta">Alertas</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <FormControl sx={{ minWidth: 120 }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={filtros.leidas}
+                    label="Estado"
+                    onChange={(e) => handleFiltroChange('leidas', e.target.value)}
+                  >
+                    <MenuItem value="">Todas</MenuItem>
+                    <MenuItem value="false">No leídas</MenuItem>
+                    <MenuItem value="true">Leídas</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            }
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FilterIcon />
+              Filtros
+            </Box>
+          </SectionTitle>
         </Paper>
 
         {/* Lista de notificaciones */}
@@ -277,12 +315,12 @@ const NotificacionesPage = () => {
           ) : notificaciones.length === 0 ? (
             <Box sx={{ p: 4, textAlign: 'center' }}>
               <NotificationsIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
+              <Typography variant="h6" color="text.secondary" gutterBottom>
                 No tienes notificaciones
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <MetaText>
                 Las notificaciones aparecerán aquí cuando tengas nuevas alertas o recordatorios
-              </Typography>
+              </MetaText>
             </Box>
           ) : (
             <List>

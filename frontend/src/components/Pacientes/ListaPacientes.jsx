@@ -39,6 +39,7 @@ import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';
+import { PageTitle, SectionTitle, MetaText, InfoText } from '../Common/TypographyHelpers';
 import PacienteService from '../../services/pacienteService';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';

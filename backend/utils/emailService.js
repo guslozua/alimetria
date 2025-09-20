@@ -1,9 +1,49 @@
 const nodemailer = require('nodemailer');
+const { executeQuery } = require('../config/database');
 
 class EmailService {
   constructor() {
     this.transporter = null;
     this.configurarTransporter();
+  }
+
+  // Obtener configuración desde la base de datos
+  async obtenerConfiguracion(clave) {
+    try {
+      const query = 'SELECT valor, tipo FROM configuraciones WHERE clave = ?';
+      const resultado = await executeQuery(query, [clave]);
+      
+      if (resultado.length === 0) {
+        return null;
+      }
+      
+      const config = resultado[0];
+      let valor = config.valor;
+      
+      // Parsear según el tipo
+      if (config.tipo === 'boolean') {
+        valor = valor === 'true' || valor === true;
+      } else if (config.tipo === 'number') {
+        valor = parseFloat(valor);
+      } else if (config.tipo === 'json') {
+        try {
+          valor = JSON.parse(valor);
+        } catch (error) {
+          console.warn(`Error parseando JSON de ${clave}:`, error);
+        }
+      }
+      
+      return valor;
+    } catch (error) {
+      console.error('Error obteniendo configuración:', error);
+      return null;
+    }
+  }
+
+  // Verificar si el envío de emails está habilitado
+  async emailsHabilitados() {
+    const habilitado = await this.obtenerConfiguracion('email_habilitado');
+    return habilitado === true;
   }
 
   configurarTransporter() {
@@ -39,14 +79,31 @@ class EmailService {
   }
 
   async enviarEmail(destinatario, asunto, contenidoHTML, contenidoTexto = null) {
+    // 🚨 VERIFICACIÓN PRINCIPAL: Revisar si los emails están habilitados
+    const emailsActivos = await this.emailsHabilitados();
+    if (!emailsActivos) {
+      console.log('🚫 Envío de emails DESHABILITADO por configuración del sistema');
+      return {
+        success: false,
+        message: 'Envío de emails deshabilitado en configuración del sistema',
+        disabled: true
+      };
+    }
+
     if (!this.transporter) {
       console.warn('⚠️ Transporter de email no configurado');
-      return false;
+      return {
+        success: false,
+        message: 'Transporter de email no configurado'
+      };
     }
 
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
       console.warn('⚠️ Credenciales de email no configuradas');
-      return false;
+      return {
+        success: false,
+        message: 'Credenciales de email no configuradas'
+      };
     }
 
     try {
@@ -63,10 +120,18 @@ class EmailService {
 
       const info = await this.transporter.sendMail(mailOptions);
       console.log('✅ Email enviado exitosamente:', info.messageId);
-      return true;
+      return {
+        success: true,
+        messageId: info.messageId,
+        message: 'Email enviado exitosamente'
+      };
     } catch (error) {
       console.error('❌ Error enviando email:', error);
-      return false;
+      return {
+        success: false,
+        message: 'Error enviando email: ' + error.message,
+        error: error
+      };
     }
   }
 
@@ -211,12 +276,96 @@ class EmailService {
 
   async enviarRecordatorioCita(datosEmail, datosCita) {
     const plantilla = this.generarPlantillaRecordatorioCita(datosCita);
-    return await this.enviarEmail(datosEmail, plantilla.asunto, plantilla.contenidoHTML);
+    const resultado = await this.enviarEmail(datosEmail, plantilla.asunto, plantilla.contenidoHTML);
+    
+    if (resultado.disabled) {
+      console.log('📧 Recordatorio de cita NO enviado - Emails deshabilitados');
+    } else if (resultado.success) {
+      console.log('📧 Recordatorio de cita enviado exitosamente');
+    } else {
+      console.error('❌ Error enviando recordatorio de cita:', resultado.message);
+    }
+    
+    return resultado;
   }
 
   async enviarMedicionPendiente(datosEmail, datosPaciente) {
     const plantilla = this.generarPlantillaMedicionPendiente(datosPaciente);
-    return await this.enviarEmail(datosEmail, plantilla.asunto, plantilla.contenidoHTML);
+    const resultado = await this.enviarEmail(datosEmail, plantilla.asunto, plantilla.contenidoHTML);
+    
+    if (resultado.disabled) {
+      console.log('📈 Notificación de medición pendiente NO enviada - Emails deshabilitados');
+    } else if (resultado.success) {
+      console.log('📈 Notificación de medición pendiente enviada exitosamente');
+    } else {
+      console.error('❌ Error enviando notificación de medición pendiente:', resultado.message);
+    }
+    
+    return resultado;
+  }
+
+  // Método para probar la configuración de email
+  async enviarEmailPrueba(destinatario) {
+    const asunto = 'Prueba de Configuración - Sistema Alimetria';
+    const contenidoHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+          .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { color: #1976d2; font-size: 24px; font-weight: bold; }
+          .content { line-height: 1.6; color: #333; text-align: center; }
+          .success { background-color: #d4edda; padding: 20px; border-radius: 5px; margin: 20px 0; color: #155724; }
+          .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🏥 Alimetria</div>
+          </div>
+          
+          <div class="content">
+            <h2>✅ ¡Configuración de Email Exitosa!</h2>
+            
+            <div class="success">
+              <p><strong>🎉 ¡Felicidades!</strong></p>
+              <p>Tu sistema de emails está configurado correctamente y funcionando.</p>
+              <p>Fecha de prueba: ${new Date().toLocaleString('es-ES')}</p>
+            </div>
+            
+            <p>Ahora puedes recibir notificaciones automáticas del sistema:</p>
+            <ul style="text-align: left; display: inline-block;">
+              <li>📥 Recordatorios de citas</li>
+              <li>📈 Alertas de mediciones pendientes</li>
+              <li>🎂 Notificaciones de cumpleaños</li>
+              <li>⚙️ Notificaciones del sistema</li>
+            </ul>
+          </div>
+          
+          <div class="footer">
+            <p>Este es un email de prueba generado automáticamente</p>
+            <p>Sistema Alimetria - ${new Date().getFullYear()}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    const resultado = await this.enviarEmail(destinatario, asunto, contenidoHTML);
+    
+    if (resultado.success) {
+      console.log('🧪 Email de prueba enviado exitosamente');
+    } else if (resultado.disabled) {
+      console.log('🚫 Email de prueba NO enviado - Emails deshabilitados');
+    } else {
+      console.error('❌ Error enviando email de prueba:', resultado.message);
+    }
+    
+    return resultado;
   }
 }
 

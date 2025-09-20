@@ -167,6 +167,14 @@ export const configuracionService = {
   obtenerCategorias: async () => {
     const response = await api.get('/configuraciones/categorias');
     return response;
+  },
+
+  // Probar configuración de email
+  probarEmail: async (emailDestino) => {
+    const response = await api.post('/configuraciones/probar-email', {
+      email_destino: emailDestino
+    });
+    return response;
   }
 };
 

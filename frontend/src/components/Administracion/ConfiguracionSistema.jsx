@@ -18,7 +18,11 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -38,6 +42,9 @@ const ConfiguracionSistema = () => {
   const [guardando, setGuardando] = useState(false);
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [expandedPanels, setExpandedPanels] = useState({});
+  const [testEmailDialog, setTestEmailDialog] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
 
   useEffect(() => {
     cargarConfiguraciones();
@@ -137,35 +144,119 @@ const ConfiguracionSistema = () => {
     }
   };
 
+  const enviarEmailPrueba = async () => {
+    if (!testEmailAddress) {
+      enqueueSnackbar('Por favor ingresa una dirección de email', { variant: 'warning' });
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(testEmailAddress)) {
+      enqueueSnackbar('Por favor ingresa un email válido', { variant: 'warning' });
+      return;
+    }
+    
+    try {
+      setSendingTestEmail(true);
+      const response = await configuracionService.probarEmail(testEmailAddress);
+      
+      if (response.success) {
+        enqueueSnackbar('✅ Email de prueba enviado exitosamente', { variant: 'success' });
+        setTestEmailDialog(false);
+        setTestEmailAddress('');
+      } else if (response.disabled) {
+        enqueueSnackbar('⚠️ Los emails están deshabilitados en la configuración', { variant: 'warning' });
+        // Cerrar modal incluso si está deshabilitado
+        setTestEmailDialog(false);
+        setTestEmailAddress('');
+      } else {
+        enqueueSnackbar(`❌ Error: ${response.message}`, { variant: 'error' });
+        // Cerrar modal en caso de error
+        setTestEmailDialog(false);
+        setTestEmailAddress('');
+      }
+    } catch (error) {
+      console.error('Error enviando email de prueba:', error);
+      enqueueSnackbar(
+        error.response?.data?.message || 'Error enviando email de prueba',
+        { variant: 'error' }
+      );
+      // Cerrar modal en caso de excepción
+      setTestEmailDialog(false);
+      setTestEmailAddress('');
+    } finally {
+      setSendingTestEmail(false);
+    }
+  };
+
   const renderCampoConfiguracion = (config) => {
     const { id, clave, valor, tipo, descripcion } = config;
     
+    // Configuraciones especiales con alertas
+    const configuracionesEspeciales = {
+      'email_habilitado': {
+        icon: '📧',
+        alert: valor ? 
+          { severity: 'success', text: 'Emails habilitados - El sistema puede enviar notificaciones' } :
+          { severity: 'warning', text: 'Emails deshabilitados - No se envían notificaciones automáticas' }
+      },
+      'backup_automatico': {
+        icon: '💾',
+        alert: valor ? 
+          { severity: 'info', text: 'Respaldos automáticos activados' } :
+          { severity: 'warning', text: 'Respaldos automáticos desactivados - Recuerda hacer respaldos manuales' }
+      },
+      'mostrar_demo': {
+        icon: '🧪',
+        alert: valor ? 
+          { severity: 'info', text: 'Datos de demostración visibles para pruebas' } :
+          { severity: 'success', text: 'Modo producción - Solo datos reales' }
+      }
+    };
+    
+    const configEspecial = configuracionesEspeciales[clave];
+    
+    let campo;
+    
     switch (tipo) {
       case 'boolean':
-        return (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={valor === true || valor === 'true'}
-                onChange={(e) => handleConfiguracionChange(id, e.target.checked)}
-                color="primary"
-              />
-            }
-            label={
-              <Box>
-                <Typography variant="body2" fontWeight="medium">
-                  {clave}
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  {descripcion}
-                </Typography>
-              </Box>
-            }
-          />
+        campo = (
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={valor === true || valor === 'true'}
+                  onChange={(e) => handleConfiguracionChange(id, e.target.checked)}
+                  color="primary"
+                  size="medium"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" fontWeight="medium">
+                    {configEspecial?.icon} {clave}
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    {descripcion}
+                  </Typography>
+                </Box>
+              }
+            />
+            {configEspecial?.alert && (
+              <Alert 
+                severity={configEspecial.alert.severity} 
+                sx={{ mt: 1, fontSize: '0.75rem' }}
+                variant="outlined"
+              >
+                {configEspecial.alert.text}
+              </Alert>
+            )}
+          </Box>
         );
+        break;
         
       case 'number':
-        return (
+        campo = (
           <TextField
             fullWidth
             label={clave}
@@ -177,9 +268,10 @@ const ConfiguracionSistema = () => {
             size="small"
           />
         );
+        break;
         
       case 'json':
-        return (
+        campo = (
           <TextField
             fullWidth
             label={clave}
@@ -200,31 +292,43 @@ const ConfiguracionSistema = () => {
             size="small"
           />
         );
+        break;
         
       default:
-        return (
+        // Para campos de tipo string, agregar validaciones especiales
+        const isPasswordField = clave.includes('password') || clave.includes('contraseña');
+        const isEmailField = clave.includes('email') && !clave.includes('habilitado');
+        
+        campo = (
           <TextField
             fullWidth
             label={clave}
+            type={isPasswordField ? 'password' : 'text'}
             value={valor || ''}
             onChange={(e) => handleConfiguracionChange(id, e.target.value)}
             helperText={descripcion}
             variant="outlined"
             size="small"
+            error={isEmailField && valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)}
           />
         );
+        break;
     }
+    
+    return campo;
   };
 
   const obtenerNombreCategoria = (categoria) => {
     const nombres = {
-      'general': 'General',
-      'sistema': 'Sistema',
-      'notificaciones': 'Notificaciones',
-      'archivos': 'Archivos y Uploads',
-      'interfaz': 'Interfaz de Usuario',
-      'seguridad': 'Seguridad',
-      'backup': 'Respaldo y Mantenimiento'
+      'general': '🏢 General',
+      'sistema': '⚙️ Sistema',
+      'notificaciones': '📧 Notificaciones y Email',
+      'archivos': '📁 Archivos y Uploads',
+      'interfaz': '🎨 Interfaz de Usuario',
+      'seguridad': '🔒 Seguridad',
+      'reportes': '📊 Reportes',
+      'citas': '📅 Citas y Agenda',
+      'backup': '💾 Respaldo y Mantenimiento'
     };
     return nombres[categoria] || categoria;
   };
@@ -250,6 +354,66 @@ const ConfiguracionSistema = () => {
           Administra las configuraciones globales del sistema Alimetria
         </Typography>
       </Box>
+
+      {/* Estado del Sistema */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            📡 Estado del Sistema
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="textSecondary">
+                  📧 Emails:
+                </Typography>
+                <Chip 
+                  label={configuraciones.find(c => c.clave === 'email_habilitado')?.valor ? 'Habilitado' : 'Deshabilitado'}
+                  color={configuraciones.find(c => c.clave === 'email_habilitado')?.valor ? 'success' : 'error'}
+                  size="small"
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="textSecondary">
+                  💾 Respaldos:
+                </Typography>
+                <Chip 
+                  label={configuraciones.find(c => c.clave === 'backup_automatico')?.valor ? 'Automático' : 'Manual'}
+                  color={configuraciones.find(c => c.clave === 'backup_automatico')?.valor ? 'info' : 'warning'}
+                  size="small"
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="textSecondary">
+                  🧪 Modo:
+                </Typography>
+                <Chip 
+                  label={configuraciones.find(c => c.clave === 'mostrar_demo')?.valor ? 'Demo' : 'Producción'}
+                  color={configuraciones.find(c => c.clave === 'mostrar_demo')?.valor ? 'warning' : 'success'}
+                  size="small"
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2" color="textSecondary">
+                  ⚙️ Versión:
+                </Typography>
+                <Chip 
+                  label={configuraciones.find(c => c.clave === 'sistema_version')?.valor || '1.0.0'}
+                  color="primary"
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Controles superiores */}
       <Card sx={{ mb: 3 }}>
@@ -280,6 +444,17 @@ const ConfiguracionSistema = () => {
                 >
                   Recargar
                 </Button>
+                {/* Botón especial para probar email */}
+                {configuraciones.find(c => c.clave === 'email_habilitado')?.valor && (
+                  <Button
+                    variant="outlined"
+                    color="info"
+                    startIcon={<AddIcon />}
+                    onClick={() => setTestEmailDialog(true)}
+                  >
+                    Probar Email
+                  </Button>
+                )}
                 <Button
                   variant="contained"
                   startIcon={<SaveIcon />}
@@ -377,6 +552,62 @@ const ConfiguracionSistema = () => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Diálogo para probar email */}
+      <Dialog open={testEmailDialog} onClose={() => setTestEmailDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          🧪 Probar Configuración de Email
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              Envía un email de prueba para verificar que la configuración sea correcta.
+            </Typography>
+            
+            <TextField
+              fullWidth
+              label="Email de destino"
+              type="email"
+              value={testEmailAddress}
+              onChange={(e) => setTestEmailAddress(e.target.value)}
+              placeholder="tu-email@ejemplo.com"
+              helperText="Ingresa el email donde quieres recibir la prueba"
+              sx={{ mt: 2 }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  enviarEmailPrueba();
+                }
+              }}
+            />
+            
+            {configuraciones.find(c => c.clave === 'email_habilitado')?.valor ? (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                ✅ Envío de emails habilitado
+              </Alert>
+            ) : (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                ⚠️ Envío de emails deshabilitado - No se enviará el email
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setTestEmailDialog(false);
+            setTestEmailAddress('');
+          }}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={enviarEmailPrueba}
+            variant="contained"
+            disabled={sendingTestEmail || !testEmailAddress}
+            startIcon={sendingTestEmail ? <CircularProgress size={20} /> : <AddIcon />}
+          >
+            {sendingTestEmail ? 'Enviando...' : 'Enviar Prueba'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -258,7 +258,11 @@ const GestionObrasSociales = () => {
       }
 
       cerrarDialog();
-      cargarObrasSociales();
+      // Recargar tanto la lista como las estadísticas
+      await Promise.all([
+        cargarObrasSociales(),
+        cargarEstadisticasGenerales()
+      ]);
     } catch (error) {
       console.error('Error guardando obra social:', error);
       enqueueSnackbar(error.message || 'Error guardando obra social', { variant: 'error' });
@@ -270,7 +274,11 @@ const GestionObrasSociales = () => {
       try {
         await ObraSocialService.delete(obraSocial.id);
         enqueueSnackbar('Obra social eliminada exitosamente', { variant: 'success' });
-        cargarObrasSociales();
+        // Recargar tanto la lista como las estadísticas
+        await Promise.all([
+          cargarObrasSociales(),
+          cargarEstadisticasGenerales()
+        ]);
       } catch (error) {
         console.error('Error eliminando obra social:', error);
         enqueueSnackbar(error.message || 'Error eliminando obra social', { variant: 'error' });
