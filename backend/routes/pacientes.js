@@ -80,20 +80,7 @@ router.get('/:id/fotos-evolucion',
 router.post('/subir-foto-evolucion',
   requirePermission('pacientes', 'actualizar'),
   (req, res, next) => {
-    const multer = require('multer');
-    const upload = multer({
-      storage: multer.memoryStorage(),
-      limits: { fileSize: 10 * 1024 * 1024 },
-      fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (allowedTypes.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new Error('Solo se permiten archivos JPG y PNG'), false);
-        }
-      }
-    }).single('foto_evolucion');
-    
+    const { upload, procesarFotoEvolucion } = require('../middleware/fotoEvolucionUpload');
     upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({
@@ -101,7 +88,7 @@ router.post('/subir-foto-evolucion',
           message: err.message
         });
       }
-      next();
+      procesarFotoEvolucion(req, res, next);
     });
   },
   PacienteController.subirFotoEvolucion

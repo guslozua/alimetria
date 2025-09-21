@@ -745,24 +745,17 @@ class PacienteController {
     try {
       console.log('Subiendo foto de evolución...');
       console.log('req.body:', req.body);
-      console.log('req.file:', req.file ? 'Archivo recibido' : 'No hay archivo');
       
-      if (!req.file) {
+      if (!req.fotoEvolucion) {
         return res.status(400).json({
           success: false,
-          message: 'No se recibió ningún archivo'
+          message: 'Error procesando la imagen'
         });
       }
 
-      const { pacienteId, tipo_foto, descripcion, peso_momento } = req.body;
+      const { pacienteId } = req.body;
+      const { tipo_foto, descripcion, peso_momento, medicion_relacionada_id } = req.body;
       
-      if (!pacienteId) {
-        return res.status(400).json({
-          success: false,
-          message: 'ID de paciente es requerido'
-        });
-      }
-
       // Verificar que el paciente existe
       const paciente = await Paciente.findById(pacienteId);
       if (!paciente) {
@@ -772,39 +765,17 @@ class PacienteController {
         });
       }
 
-      // Guardar archivo temporalmente (versión simple)
-      const fs = require('fs').promises;
-      const path = require('path');
-      
-      const timestamp = Date.now();
-      const randomNum = Math.floor(Math.random() * 1000000);
-      const extension = path.extname(req.file.originalname) || '.jpg';
-      const filename = `evolucion-paciente-${pacienteId}-${timestamp}-${randomNum}${extension}`;
-      
-      const uploadDir = path.join(__dirname, '../uploads/fotos');
-      const filepath = path.join(uploadDir, filename);
-      
-      // Asegurar que el directorio existe
-      try {
-        await fs.access(uploadDir);
-      } catch (error) {
-        await fs.mkdir(uploadDir, { recursive: true });
-      }
-      
-      // Guardar archivo
-      await fs.writeFile(filepath, req.file.buffer);
-      
       // Importar FotoPaciente
       const FotoPaciente = require('../models/FotoPaciente');
       
       // Crear registro en base de datos
       const fotoData = {
         paciente_id: parseInt(pacienteId),
-        ruta_imagen: filename,
+        ruta_imagen: req.fotoEvolucion.filename,
         tipo_foto: tipo_foto || 'frontal',
         descripcion: descripcion || null,
         peso_momento: peso_momento ? parseFloat(peso_momento) : null,
-        medicion_relacionada_id: null,
+        medicion_relacionada_id: medicion_relacionada_id ? parseInt(medicion_relacionada_id) : null,
         usuario_id: req.user.id
       };
       
@@ -812,7 +783,7 @@ class PacienteController {
       
       res.json({
         success: true,
-        message: 'Foto de evolución subida exitosamente',
+        message: 'Foto de evolución subida y optimizada exitosamente',
         data: {
           id: nuevaFoto.id,
           ruta_imagen: `/uploads/fotos/${nuevaFoto.ruta_imagen}`,

@@ -32,7 +32,8 @@ import {
   Delete as DeleteIcon,
   Info as InfoIcon,
   Timeline as TimelineIcon,
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
+  CompareArrows as CompareArrowsIcon
 } from '@mui/icons-material';
 import { formatearFecha } from '../../utils/formatters';
 
@@ -43,6 +44,7 @@ const FotosEvolucion = ({ pacienteId, pacienteNombre }) => {
   const [error, setError] = useState(null);
   const [dialogSubir, setDialogSubir] = useState(false);
   const [dialogVer, setDialogVer] = useState({ open: false, foto: null });
+  const [dialogComparar, setDialogComparar] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     archivo: null,
@@ -226,13 +228,24 @@ const FotosEvolucion = ({ pacienteId, pacienteNombre }) => {
           Fotos de Evolución - {pacienteNombre}
         </Typography>
         
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDialogSubir(true)}
-        >
-          Nueva Foto
-        </Button>
+        <Box display="flex" gap={1}>
+          {fotos.length >= 2 && (
+            <Button
+              variant="outlined"
+              startIcon={<TimelineIcon />}
+              onClick={() => setDialogComparar(true)}
+            >
+              Comparar
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setDialogSubir(true)}
+          >
+            Nueva Foto
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -512,7 +525,283 @@ const FotosEvolucion = ({ pacienteId, pacienteNombre }) => {
           </>
         )}
       </Dialog>
+
+      {/* Dialog Comparar Fotos */}
+      <ComparacionFotos
+        open={dialogComparar}
+        onClose={() => setDialogComparar(false)}
+        fotos={fotos}
+        pacienteNombre={pacienteNombre}
+      />
     </Box>
+  );
+};
+
+// Componente para comparar fotos
+const ComparacionFotos = ({ open, onClose, fotos, pacienteNombre }) => {
+  const [fotoIzquierda, setFotoIzquierda] = useState(null);
+  const [fotoDerecha, setFotoDerecha] = useState(null);
+  const [tipoFiltro, setTipoFiltro] = useState('todos');
+
+  // Filtrar fotos por tipo
+  const fotosFiltradas = fotos.filter(foto => 
+    tipoFiltro === 'todos' || foto.tipo_foto === tipoFiltro
+  );
+
+  // Inicializar con las dos fotos más recientes al abrir
+  useEffect(() => {
+    if (open && fotos.length >= 2) {
+      const fotosOrdenadas = [...fotos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      setFotoIzquierda(fotosOrdenadas[1]); // Segunda más reciente
+      setFotoDerecha(fotosOrdenadas[0]); // Más reciente
+    }
+  }, [open, fotos]);
+
+  const calcularDiferenciaPeso = () => {
+    if (!fotoIzquierda?.peso_momento || !fotoDerecha?.peso_momento) return null;
+    const diferencia = fotoDerecha.peso_momento - fotoIzquierda.peso_momento;
+    return diferencia;
+  };
+
+  const calcularDiferenciaTiempo = () => {
+    if (!fotoIzquierda?.fecha || !fotoDerecha?.fecha) return null;
+    const fecha1 = new Date(fotoIzquierda.fecha);
+    const fecha2 = new Date(fotoDerecha.fecha);
+    const diferenciaDias = Math.abs((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
+    return Math.round(diferenciaDias);
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>
+        <Box display="flex" alignItems="center" gap={1}>
+          <CompareArrowsIcon color="primary" />
+          Comparar Fotos de Evolución - {pacienteNombre}
+        </Box>
+      </DialogTitle>
+      
+      <DialogContent>
+        {/* Filtros y controles */}
+        <Box sx={{ mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Filtrar por tipo</InputLabel>
+                <Select
+                  value={tipoFiltro}
+                  label="Filtrar por tipo"
+                  onChange={(e) => setTipoFiltro(e.target.value)}
+                >
+                  <MenuItem value="todos">Todos los tipos</MenuItem>
+                  <MenuItem value="frontal">Solo Frontales</MenuItem>
+                  <MenuItem value="lateral">Solo Laterales</MenuItem>
+                  <MenuItem value="posterior">Solo Posteriores</MenuItem>
+                  <MenuItem value="detalle">Solo Detalles</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            {/* Estadísticas de comparación */}
+            {fotoIzquierda && fotoDerecha && (
+              <Grid item xs={12} sm={8}>
+                <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                  <Grid container spacing={2}>
+                    {calcularDiferenciaTiempo() && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Diferencia de tiempo</Typography>
+                        <Typography variant="h6">{calcularDiferenciaTiempo()} días</Typography>
+                      </Grid>
+                    )}
+                    {calcularDiferenciaPeso() !== null && (
+                      <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Diferencia de peso</Typography>
+                        <Typography 
+                          variant="h6" 
+                          color={calcularDiferenciaPeso() > 0 ? 'success.main' : calcularDiferenciaPeso() < 0 ? 'error.main' : 'text.primary'}
+                        >
+                          {calcularDiferenciaPeso() > 0 ? '+' : ''}{calcularDiferenciaPeso().toFixed(1)} kg
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
+          </Grid>
+        </Box>
+
+        {/* Comparación de fotos */}
+        <Grid container spacing={3}>
+          {/* Foto Izquierda */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom color="primary">
+                Foto 1 (Anterior)
+              </Typography>
+              
+              {/* Selector de foto izquierda */}
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Seleccionar foto</InputLabel>
+                <Select
+                  value={fotoIzquierda?.id || ''}
+                  label="Seleccionar foto"
+                  onChange={(e) => {
+                    const foto = fotosFiltradas.find(f => f.id === e.target.value);
+                    setFotoIzquierda(foto);
+                  }}
+                >
+                  {fotosFiltradas.map((foto) => (
+                    <MenuItem key={foto.id} value={foto.id}>
+                      {formatearFecha(foto.fecha)} - {foto.tipo_foto}
+                      {foto.peso_momento && ` (${foto.peso_momento} kg)`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              {fotoIzquierda ? (
+                <Box>
+                  <img
+                    src={fotoIzquierda.ruta_imagen}
+                    alt="Foto anterior"
+                    style={{
+                      width: '100%',
+                      maxHeight: 400,
+                      objectFit: 'contain',
+                      borderRadius: 8
+                    }}
+                  />
+                  <Box sx={{ mt: 2 }}>
+                    <Chip 
+                      label={fotoIzquierda.tipo_foto} 
+                      size="small" 
+                      color="primary"
+                      sx={{ mr: 1 }}
+                    />
+                    {fotoIzquierda.peso_momento && (
+                      <Chip 
+                        label={`${fotoIzquierda.peso_momento} kg`} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                      />
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {formatearFecha(fotoIzquierda.fecha)}
+                    </Typography>
+                    {fotoIzquierda.descripcion && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {fotoIzquierda.descripcion}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ) : (
+                <Box 
+                  sx={{ 
+                    height: 300, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    bgcolor: 'background.default',
+                    borderRadius: 1
+                  }}
+                >
+                  <Typography color="text.secondary">Selecciona una foto</Typography>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+
+          {/* Foto Derecha */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom color="secondary">
+                Foto 2 (Posterior)
+              </Typography>
+              
+              {/* Selector de foto derecha */}
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Seleccionar foto</InputLabel>
+                <Select
+                  value={fotoDerecha?.id || ''}
+                  label="Seleccionar foto"
+                  onChange={(e) => {
+                    const foto = fotosFiltradas.find(f => f.id === e.target.value);
+                    setFotoDerecha(foto);
+                  }}
+                >
+                  {fotosFiltradas.map((foto) => (
+                    <MenuItem key={foto.id} value={foto.id}>
+                      {formatearFecha(foto.fecha)} - {foto.tipo_foto}
+                      {foto.peso_momento && ` (${foto.peso_momento} kg)`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              {fotoDerecha ? (
+                <Box>
+                  <img
+                    src={fotoDerecha.ruta_imagen}
+                    alt="Foto posterior"
+                    style={{
+                      width: '100%',
+                      maxHeight: 400,
+                      objectFit: 'contain',
+                      borderRadius: 8
+                    }}
+                  />
+                  <Box sx={{ mt: 2 }}>
+                    <Chip 
+                      label={fotoDerecha.tipo_foto} 
+                      size="small" 
+                      color="secondary"
+                      sx={{ mr: 1 }}
+                    />
+                    {fotoDerecha.peso_momento && (
+                      <Chip 
+                        label={`${fotoDerecha.peso_momento} kg`} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                      />
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {formatearFecha(fotoDerecha.fecha)}
+                    </Typography>
+                    {fotoDerecha.descripcion && (
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {fotoDerecha.descripcion}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ) : (
+                <Box 
+                  sx={{ 
+                    height: 300, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    bgcolor: 'background.default',
+                    borderRadius: 1
+                  }}
+                >
+                  <Typography color="text.secondary">Selecciona una foto</Typography>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
+      </DialogContent>
+      
+      <DialogActions>
+        <Button onClick={onClose}>
+          Cerrar
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
