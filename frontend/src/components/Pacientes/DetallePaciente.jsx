@@ -28,6 +28,7 @@ import {
 import PacienteService from '../../services/pacienteService';
 import { ListaMediciones } from '../Mediciones';
 import FormularioPaciente from './FormularioPaciente';
+import ProfilePhotoUpload from '../Common/ProfilePhotoUpload';
 import { formatearFecha, formatearEdad, formatearTelefono, formatearNombreCompleto, formatearSexo, getSexoColor } from '../../utils/formatters';
 
 function TabPanel({ children, value, index, ...other }) {
@@ -117,6 +118,22 @@ const DetallePaciente = () => {
     cargarPaciente();
   };
 
+  const handlePhotoChange = (nuevaFoto) => {
+    // Actualizar el estado local del paciente con la nueva foto
+    setPaciente(prev => ({
+      ...prev,
+      foto_perfil: nuevaFoto
+    }));
+  };
+
+  const handlePhotoDelete = () => {
+    // Limpiar la foto del estado local
+    setPaciente(prev => ({
+      ...prev,
+      foto_perfil: null
+    }));
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -188,16 +205,17 @@ const DetallePaciente = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} md={2}>
               <Box display="flex" justifyContent="center">
-                <Avatar
-                  sx={{ 
-                    width: 120, 
-                    height: 120,
-                    fontSize: '2rem'
-                  }}
-                  src={paciente.foto_perfil}
-                >
-                  {paciente.nombre?.charAt(0)}{paciente.apellido?.charAt(0)}
-                </Avatar>
+                <ProfilePhotoUpload
+                  currentPhoto={paciente.foto_perfil}
+                  onPhotoChange={handlePhotoChange}
+                  onPhotoDelete={handlePhotoDelete}
+                  pacienteId={paciente.id}
+                  nombreCompleto={formatearNombreCompleto(paciente.nombre, paciente.apellido)}
+                  sexo={paciente.sexo}
+                  size={120}
+                  editable={true}
+                  showName={false}
+                />
               </Box>
             </Grid>
             <Grid item xs={12} md={10}>

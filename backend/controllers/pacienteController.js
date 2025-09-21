@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const Paciente = require('../models/Paciente');
+const { deleteProfilePhoto } = require('../middleware/photoUpload');
 
 class PacienteController {
   // Obtener todos los pacientes
@@ -429,6 +430,171 @@ class PacienteController {
 
     } catch (error) {
       console.error('Error en búsqueda de pacientes:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Subir foto de perfil
+  static async uploadProfilePhoto(req, res) {
+    try {
+      const pacienteId = req.processedFile.pacienteId;
+      const filename = req.processedFile.filename;
+
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(pacienteId);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      // Eliminar foto anterior si existe
+      if (paciente.foto_perfil) {
+        await deleteProfilePhoto(paciente.foto_perfil);
+      }
+
+      // Actualizar paciente con nueva foto
+      const datosActualizacion = {
+        foto_perfil: filename,
+        fecha_actualizacion: new Date()
+      };
+
+      await paciente.update(datosActualizacion);
+
+      res.json({
+        success: true,
+        message: 'Foto de perfil actualizada exitosamente',
+        data: {
+          foto_perfil: filename
+        }
+      });
+
+    } catch (error) {
+      console.error('Error subiendo foto de perfil:', error);
+      
+      // Limpiar archivo si hubo error en la base de datos
+      if (req.processedFile) {
+        await deleteProfilePhoto(req.processedFile.filename);
+      }
+      
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Eliminar foto de perfil
+  static async deleteProfilePhoto(req, res) {
+    try {
+      const { id } = req.params;
+
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(id);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      if (!paciente.foto_perfil) {
+        return res.status(400).json({
+          success: false,
+          message: 'El paciente no tiene foto de perfil'
+        });
+      }
+
+      // Eliminar archivo físico
+      const deleteSuccess = await deleteProfilePhoto(paciente.foto_perfil);
+      if (!deleteSuccess) {
+        console.warn(`No se pudo eliminar el archivo físico: ${paciente.foto_perfil}`);
+      }
+
+      // Actualizar paciente removiendo la foto
+      const datosActualizacion = {
+        foto_perfil: null,
+        fecha_actualizacion: new Date()
+      };
+
+      await Paciente.update(id, datosActualizacion);
+
+      res.json({
+        success: true,
+        message: 'Foto de perfil eliminada exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error eliminando foto de perfil:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Subir foto de perfil
+  static async uploadProfilePhoto(req, res) {
+    try {
+      console.log('🔄 Iniciando uploadProfilePhoto');
+      console.log('📁 req.file:', req.file);
+      console.log('📋 req.body:', req.body);
+      console.log('🔧 req.processedFile:', req.processedFile);
+      
+      if (!req.processedFile) {
+        console.log('❌ No se encontró req.processedFile');
+        return res.status(400).json({
+          success: false,
+          message: 'No se pudo procesar la imagen'
+        });
+      }
+
+      const { pacienteId, filename } = req.processedFile;
+
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(pacienteId);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      // Eliminar foto anterior si existe
+      if (paciente.foto_perfil) {
+        await deleteProfilePhoto(paciente.foto_perfil);
+      }
+
+      // Actualizar paciente con nueva foto
+      const datosActualizacion = {
+        foto_perfil: filename,
+        fecha_actualizacion: new Date()
+      };
+
+      await paciente.update(datosActualizacion);
+
+      // URL completa para el frontend
+      const photoUrl = `/uploads/fotos-perfil/${filename}`;
+
+      res.json({
+        success: true,
+        message: 'Foto de perfil subida exitosamente',
+        data: {
+          filename,
+          photoUrl,
+          paciente_id: pacienteId
+        }
+      });
+
+    } catch (error) {
+      console.error('Error subiendo foto de perfil:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',

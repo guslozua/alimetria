@@ -3,6 +3,7 @@ const router = express.Router();
 const PacienteController = require('../controllers/pacienteController');
 const { authenticateToken, requirePermission } = require('../middleware/auth');
 const { validateCreatePaciente, validateUpdatePaciente } = require('../middleware/pacienteValidators');
+const { upload, processProfilePhoto } = require('../middleware/photoUpload');
 
 // Todas las rutas requieren autenticación
 router.use(authenticateToken);
@@ -61,6 +62,20 @@ router.get('/:id/estadisticas',
 router.get('/:id/fotos', 
   requirePermission('pacientes', 'leer'),
   PacienteController.getFotos
+);
+
+// POST /api/pacientes/upload-foto-perfil - Subir foto de perfil
+router.post('/upload-foto-perfil',
+  requirePermission('pacientes', 'actualizar'),
+  upload,
+  processProfilePhoto,
+  PacienteController.uploadProfilePhoto
+);
+
+// DELETE /api/pacientes/:id/delete-foto-perfil - Eliminar foto de perfil
+router.delete('/:id/delete-foto-perfil',
+  requirePermission('pacientes', 'actualizar'),
+  PacienteController.deleteProfilePhoto
 );
 
 module.exports = router;

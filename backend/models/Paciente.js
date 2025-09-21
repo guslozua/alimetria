@@ -405,6 +405,7 @@ class Paciente {
       edad: this.edad,
       email: this.email,
       telefono: this.telefono,
+      foto_perfil: this.foto_perfil,
       ultimo_peso: this.ultimo_peso,
       ultimo_imc: this.ultimo_imc,
       ultima_medicion_fecha: this.ultima_medicion_fecha,

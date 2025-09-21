@@ -43,11 +43,47 @@ import { PageTitle, SectionTitle, MetaText, InfoText } from '../Common/Typograph
 import PacienteService from '../../services/pacienteService';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { formatearSexo, getSexoColor } from '../../utils/formatters';
+import { formatearSexo, getSexoColor, formatearEdad, formatearFecha } from '../../utils/formatters';
 
 const ListaPacientes = () => {
   const { hasPermission, user } = useAuth();
   const navigate = useNavigate();
+  
+  // Función para generar avatar del paciente
+  const getAvatarPaciente = (paciente) => {
+    const iniciales = `${paciente.nombre[0]}${paciente.apellido[0]}`.toUpperCase();
+    const colorSexo = paciente.sexo === 'F' ? '#e91e63' : paciente.sexo === 'M' ? '#2196f3' : '#9e9e9e';
+    
+    if (paciente.foto_perfil) {
+      return (
+        <Avatar 
+          src={`/uploads/fotos-perfil/${paciente.foto_perfil}`}
+          sx={{ 
+            mr: 2, 
+            width: 48, 
+            height: 48,
+            border: `2px solid ${colorSexo}30`
+          }}
+        >
+          {iniciales}
+        </Avatar>
+      );
+    }
+    
+    return (
+      <Avatar 
+        sx={{ 
+          mr: 2, 
+          width: 48, 
+          height: 48,
+          bgcolor: colorSexo,
+          fontWeight: 600
+        }}
+      >
+        {iniciales}
+      </Avatar>
+    );
+  };
   
   // Verificación temporal para admin
   const canReadPacientes = hasPermission('pacientes', 'leer') || user?.rol_nombre === 'administrador';
@@ -355,9 +391,7 @@ const ListaPacientes = () => {
                       <TableRow key={paciente.id} hover>
                         <TableCell>
                           <Box display="flex" alignItems="center">
-                            <Avatar sx={{ mr: 2 }}>
-                              <PersonIcon />
-                            </Avatar>
+                            {getAvatarPaciente(paciente)}
                             <Box>
                               <Typography 
                                 variant="subtitle2" 
