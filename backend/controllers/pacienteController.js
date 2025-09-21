@@ -602,6 +602,69 @@ class PacienteController {
       });
     }
   }
+
+  // Obtener citas del paciente
+  static async getCitas(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(id);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      // Importar Cita y TimezoneUtils aquí para evitar dependencia circular
+      const Cita = require('../models/Cita');
+      const TimezoneUtils = require('../utils/timezoneUtils');
+      
+      // Obtener todas las citas del paciente
+      const citas = await Cita.obtenerTodas({ paciente_id: id });
+      
+      // Formatear las citas para el frontend con conversión de timezone
+      const citasFormateadas = citas.map(cita => ({
+        id: cita.id,
+        fecha_hora: TimezoneUtils.paraFrontend(cita.fecha_hora),
+        duracion_minutos: cita.duracion_minutos,
+        tipo_consulta: cita.tipo_consulta,
+        estado: cita.estado,
+        motivo: cita.motivo,
+        notas_previas: cita.notas_previas,
+        notas_posteriores: cita.notas_posteriores,
+        nutricionista_nombre: cita.nutricionista_nombre,
+        consultorio_nombre: cita.consultorio_nombre,
+        fecha_creacion: cita.fecha_creacion,
+        fecha_actualizacion: cita.fecha_actualizacion,
+        // Agregar campos calculados útiles
+        es_pasada: TimezoneUtils.esPasado(cita.fecha_hora),
+        fecha_formateada: TimezoneUtils.formatearFechaArgentina(cita.fecha_hora)
+      }));
+      
+      res.json({
+        success: true,
+        data: {
+          paciente: {
+            id: paciente.id,
+            nombre: paciente.nombre,
+            apellido: paciente.apellido
+          },
+          citas: citasFormateadas,
+          total: citasFormateadas.length
+        }
+      });
+
+    } catch (error) {
+      console.error('Error obteniendo citas del paciente:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = PacienteController;

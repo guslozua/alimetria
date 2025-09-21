@@ -34,7 +34,9 @@ import {
   Phone as PhoneIcon,
   FilterList as FilterListIcon,
   Clear as ClearIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -54,6 +56,10 @@ const ListaCitas = ({
 }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [ordenamiento, setOrdenamiento] = useState({
+    campo: 'fecha_hora',
+    direccion: 'asc' // 'asc' para próximas primero, 'desc' para pasadas primero
+  });
   const [filtros, setFiltros] = useState({
     busqueda: '',
     estado: '',
@@ -86,10 +92,17 @@ const ListaCitas = ({
     return cumpleBusqueda && cumpleEstado && cumpleTipo && cumpleFechaDesde && cumpleFechaHasta;
   });
 
-  // Ordenar por fecha (más próximas primero)
-  const citasOrdenadas = [...citasFiltradas].sort((a, b) => 
-    dayjs(a.fecha_hora).diff(dayjs(b.fecha_hora))
-  );
+  // Ordenar citas según configuración
+  const citasOrdenadas = [...citasFiltradas].sort((a, b) => {
+    const multiplicador = ordenamiento.direccion === 'asc' ? 1 : -1;
+    
+    if (ordenamiento.campo === 'fecha_hora') {
+      return dayjs(a.fecha_hora).diff(dayjs(b.fecha_hora)) * multiplicador;
+    }
+    
+    // Se pueden agregar más campos de ordenamiento aquí en el futuro
+    return 0;
+  });
 
   // Paginación
   const citasPaginadas = citasOrdenadas.slice(
@@ -113,6 +126,14 @@ const ListaCitas = ({
       [campo]: valor
     }));
     setPage(0); // Resetear paginación al filtrar
+  };
+
+  const handleOrdenamientoChange = (campo) => {
+    setOrdenamiento(prev => ({
+      campo,
+      direccion: prev.campo === campo && prev.direccion === 'asc' ? 'desc' : 'asc'
+    }));
+    setPage(0); // Resetear paginación al ordenar
   };
 
   const limpiarFiltros = () => {
@@ -264,7 +285,23 @@ const ListaCitas = ({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>Fecha y Hora</strong></TableCell>
+                <TableCell 
+                  sx={{ 
+                    cursor: 'pointer', 
+                    userSelect: 'none',
+                    '&:hover': { backgroundColor: 'action.hover' }
+                  }}
+                  onClick={() => handleOrdenamientoChange('fecha_hora')}
+                >
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <strong>Fecha y Hora</strong>
+                    {ordenamiento.campo === 'fecha_hora' && (
+                      ordenamiento.direccion === 'asc' ? 
+                        <ArrowUpwardIcon fontSize="small" color="primary" /> : 
+                        <ArrowDownwardIcon fontSize="small" color="primary" />
+                    )}
+                  </Box>
+                </TableCell>
                 <TableCell><strong>Paciente</strong></TableCell>
                 <TableCell><strong>Tipo</strong></TableCell>
                 <TableCell><strong>Estado</strong></TableCell>

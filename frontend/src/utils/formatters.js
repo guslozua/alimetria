@@ -29,6 +29,20 @@ export const formatearFechaSoloFecha = (fecha) => {
   return formatearFecha(fecha, false);
 };
 
+// Formatear solo hora
+export const formatearHora = (fecha) => {
+  if (!fecha) return '-';
+  
+  const fechaObj = new Date(fecha);
+  
+  if (isNaN(fechaObj.getTime())) return '-';
+  
+  return fechaObj.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 // Formatear números
 export const formatearNumero = (numero, decimales = 1) => {
   if (numero === null || numero === undefined || numero === '') return '-';
@@ -296,6 +310,7 @@ export const getSexoColor = (sexo) => {
 const formatters = {
   formatearFecha,
   formatearFechaSoloFecha,
+  formatearHora,
   formatearNumero,
   formatearPeso,
   formatearAltura,

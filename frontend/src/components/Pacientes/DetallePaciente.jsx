@@ -23,10 +23,12 @@ import {
   Assessment as AssessmentIcon,
   PhotoCamera as PhotoCameraIcon,
   Assignment as AssignmentIcon,
-  PictureAsPdf as PdfIcon
+  PictureAsPdf as PdfIcon,
+  Event as EventIcon
 } from '@mui/icons-material';
 import PacienteService from '../../services/pacienteService';
 import { ListaMediciones } from '../Mediciones';
+import { ListaCitasPaciente } from '../Citas';
 import FormularioPaciente from './FormularioPaciente';
 import ProfilePhotoUpload from '../Common/ProfilePhotoUpload';
 import { formatearFecha, formatearEdad, formatearTelefono, formatearNombreCompleto, formatearSexo, getSexoColor } from '../../utils/formatters';
@@ -425,6 +427,12 @@ const DetallePaciente = () => {
               id="tab-2"
               aria-controls="tabpanel-2"
             />
+            <Tab 
+              icon={<EventIcon />} 
+              label="Citas" 
+              id="tab-3"
+              aria-controls="tabpanel-3"
+            />
           </Tabs>
         </Box>
         
@@ -470,6 +478,13 @@ const DetallePaciente = () => {
               </Button>
             </Box>
           </Box>
+        </TabPanel>
+        
+        <TabPanel value={tabValue} index={3}>
+          <ListaCitasPaciente 
+            pacienteId={id} 
+            pacienteNombre={formatearNombreCompleto(paciente.nombre, paciente.apellido)}
+          />
         </TabPanel>
       </Card>
 

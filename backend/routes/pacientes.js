@@ -64,6 +64,12 @@ router.get('/:id/fotos',
   PacienteController.getFotos
 );
 
+// GET /api/pacientes/:id/citas - Obtener citas del paciente
+router.get('/:id/citas', 
+  requirePermission('citas', 'leer'),
+  PacienteController.getCitas
+);
+
 // POST /api/pacientes/upload-foto-perfil - Subir foto de perfil
 router.post('/upload-foto-perfil',
   requirePermission('pacientes', 'actualizar'),
