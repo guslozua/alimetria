@@ -665,6 +665,221 @@ class PacienteController {
       });
     }
   }
+
+  // Obtener fotos de evolución del paciente
+  static async getFotosEvolucion(req, res) {
+    try {
+      const { id } = req.params;
+      const { tipo_foto, limit } = req.query;
+      
+      console.log('Obteniendo fotos para paciente ID:', id);
+      
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(id);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      console.log('Paciente encontrado:', paciente.nombre);
+      
+      // Importar FotoPaciente
+      const FotoPaciente = require('../models/FotoPaciente');
+      
+      const opciones = {};
+      if (tipo_foto) opciones.tipo_foto = tipo_foto;
+      if (limit) opciones.limit = parseInt(limit);
+      
+      // Obtener fotos del paciente
+      const fotos = await FotoPaciente.obtenerPorPaciente(id, opciones);
+      
+      // Formatear fotos para frontend
+      const fotosFormateadas = fotos.map(foto => ({
+        id: foto.id,
+        ruta_imagen: `/uploads/fotos/${foto.ruta_imagen}`,
+        tipo_foto: foto.tipo_foto,
+        descripcion: foto.descripcion,
+        peso_momento: foto.peso_momento,
+        fecha: foto.fecha,
+        usuario_nombre: foto.usuario_nombre
+      }));
+      
+      // Obtener estadísticas
+      const estadisticas = await FotoPaciente.obtenerEstadisticas(id);
+      
+      res.json({
+        success: true,
+        data: {
+          paciente: {
+            id: paciente.id,
+            nombre: paciente.nombre,
+            apellido: paciente.apellido
+          },
+          fotos: fotosFormateadas,
+          estadisticas: {
+            total: estadisticas.total_fotos || 0,
+            frontales: estadisticas.frontales || 0,
+            laterales: estadisticas.laterales || 0,
+            posteriores: estadisticas.posteriores || 0,
+            detalles: estadisticas.detalles || 0,
+            primera_foto: estadisticas.primera_foto,
+            ultima_foto: estadisticas.ultima_foto
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Error obteniendo fotos de evolución:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Subir foto de evolución
+  static async subirFotoEvolucion(req, res) {
+    try {
+      console.log('Subiendo foto de evolución...');
+      console.log('req.body:', req.body);
+      console.log('req.file:', req.file ? 'Archivo recibido' : 'No hay archivo');
+      
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se recibió ningún archivo'
+        });
+      }
+
+      const { pacienteId, tipo_foto, descripcion, peso_momento } = req.body;
+      
+      if (!pacienteId) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID de paciente es requerido'
+        });
+      }
+
+      // Verificar que el paciente existe
+      const paciente = await Paciente.findById(pacienteId);
+      if (!paciente) {
+        return res.status(404).json({
+          success: false,
+          message: 'Paciente no encontrado'
+        });
+      }
+
+      // Guardar archivo temporalmente (versión simple)
+      const fs = require('fs').promises;
+      const path = require('path');
+      
+      const timestamp = Date.now();
+      const randomNum = Math.floor(Math.random() * 1000000);
+      const extension = path.extname(req.file.originalname) || '.jpg';
+      const filename = `evolucion-paciente-${pacienteId}-${timestamp}-${randomNum}${extension}`;
+      
+      const uploadDir = path.join(__dirname, '../uploads/fotos');
+      const filepath = path.join(uploadDir, filename);
+      
+      // Asegurar que el directorio existe
+      try {
+        await fs.access(uploadDir);
+      } catch (error) {
+        await fs.mkdir(uploadDir, { recursive: true });
+      }
+      
+      // Guardar archivo
+      await fs.writeFile(filepath, req.file.buffer);
+      
+      // Importar FotoPaciente
+      const FotoPaciente = require('../models/FotoPaciente');
+      
+      // Crear registro en base de datos
+      const fotoData = {
+        paciente_id: parseInt(pacienteId),
+        ruta_imagen: filename,
+        tipo_foto: tipo_foto || 'frontal',
+        descripcion: descripcion || null,
+        peso_momento: peso_momento ? parseFloat(peso_momento) : null,
+        medicion_relacionada_id: null,
+        usuario_id: req.user.id
+      };
+      
+      const nuevaFoto = await FotoPaciente.crear(fotoData);
+      
+      res.json({
+        success: true,
+        message: 'Foto de evolución subida exitosamente',
+        data: {
+          id: nuevaFoto.id,
+          ruta_imagen: `/uploads/fotos/${nuevaFoto.ruta_imagen}`,
+          tipo_foto: nuevaFoto.tipo_foto,
+          descripcion: nuevaFoto.descripcion,
+          peso_momento: nuevaFoto.peso_momento,
+          fecha: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('Error subiendo foto de evolución:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  // Eliminar foto de evolución
+  static async eliminarFotoEvolucion(req, res) {
+    try {
+      const { fotoId } = req.params;
+      
+      console.log('Eliminando foto ID:', fotoId);
+      
+      // Importar FotoPaciente
+      const FotoPaciente = require('../models/FotoPaciente');
+      
+      // Verificar que la foto existe
+      const foto = await FotoPaciente.obtenerPorId(fotoId);
+      if (!foto) {
+        return res.status(404).json({
+          success: false,
+          message: 'Foto no encontrada'
+        });
+      }
+      
+      // Eliminar registro de la base de datos
+      await FotoPaciente.eliminar(fotoId);
+      
+      // Intentar eliminar archivo físico
+      try {
+        const fs = require('fs').promises;
+        const path = require('path');
+        const filepath = path.join(__dirname, '../uploads/fotos', foto.ruta_imagen);
+        await fs.unlink(filepath);
+        console.log('Archivo físico eliminado:', foto.ruta_imagen);
+      } catch (error) {
+        console.warn('No se pudo eliminar el archivo físico:', error.message);
+      }
+      
+      res.json({
+        success: true,
+        message: 'Foto eliminada exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error eliminando foto de evolución:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = PacienteController;

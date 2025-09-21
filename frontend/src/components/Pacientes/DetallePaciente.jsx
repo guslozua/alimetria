@@ -29,6 +29,7 @@ import {
 import PacienteService from '../../services/pacienteService';
 import { ListaMediciones } from '../Mediciones';
 import { ListaCitasPaciente } from '../Citas';
+import { FotosEvolucion } from '../Pacientes';
 import FormularioPaciente from './FormularioPaciente';
 import ProfilePhotoUpload from '../Common/ProfilePhotoUpload';
 import { formatearFecha, formatearEdad, formatearTelefono, formatearNombreCompleto, formatearSexo, getSexoColor } from '../../utils/formatters';
@@ -419,7 +420,6 @@ const DetallePaciente = () => {
               label="Fotos de Evolución" 
               id="tab-1"
               aria-controls="tabpanel-1"
-              disabled
             />
             <Tab 
               icon={<AssignmentIcon />} 
@@ -444,9 +444,10 @@ const DetallePaciente = () => {
         </TabPanel>
         
         <TabPanel value={tabValue} index={1}>
-          <Typography variant="body1" color="textSecondary">
-            Módulo de fotos de evolución en desarrollo
-          </Typography>
+          <FotosEvolucion 
+            pacienteId={id} 
+            pacienteNombre={formatearNombreCompleto(paciente.nombre, paciente.apellido)}
+          />
         </TabPanel>
         
         <TabPanel value={tabValue} index={2}>

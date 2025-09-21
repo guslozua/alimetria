@@ -70,6 +70,49 @@ router.get('/:id/citas',
   PacienteController.getCitas
 );
 
+// GET /api/pacientes/:id/fotos-evolucion - Obtener fotos de evolución del paciente
+router.get('/:id/fotos-evolucion', 
+  requirePermission('pacientes', 'leer'),
+  PacienteController.getFotosEvolucion
+);
+
+// POST /api/pacientes/subir-foto-evolucion - Subir foto de evolución
+router.post('/subir-foto-evolucion',
+  requirePermission('pacientes', 'actualizar'),
+  (req, res, next) => {
+    const multer = require('multer');
+    const upload = multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (allowedTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Solo se permiten archivos JPG y PNG'), false);
+        }
+      }
+    }).single('foto_evolucion');
+    
+    upload(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          message: err.message
+        });
+      }
+      next();
+    });
+  },
+  PacienteController.subirFotoEvolucion
+);
+
+// DELETE /api/pacientes/fotos-evolucion/:fotoId - Eliminar foto de evolución
+router.delete('/fotos-evolucion/:fotoId',
+  requirePermission('pacientes', 'actualizar'),
+  PacienteController.eliminarFotoEvolucion
+);
+
 // POST /api/pacientes/upload-foto-perfil - Subir foto de perfil
 router.post('/upload-foto-perfil',
   requirePermission('pacientes', 'actualizar'),
