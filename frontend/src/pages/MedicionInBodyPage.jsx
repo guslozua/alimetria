@@ -123,7 +123,7 @@ const MedicionInBodyPage = () => {
             <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
               {paciente.foto_perfil ? (
                 <img 
-                  src={paciente.foto_perfil} 
+                  src={`/uploads/fotos-perfil/${paciente.foto_perfil}`}
                   alt={`${paciente.nombre} ${paciente.apellido}`}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
