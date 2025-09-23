@@ -24,7 +24,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  Tooltip
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -344,10 +345,14 @@ const Dashboard = () => {
           }}
         >
           <Container maxWidth="xl">
-            <Toolbar sx={{ px: 0, py: 1.5, minHeight: '72px !important' }}>
+            <Toolbar sx={{ 
+              px: { xs: 1, sm: 2, md: 0 }, 
+              py: 1.5, 
+              minHeight: { xs: '64px !important', sm: '72px !important' }
+            }}>
               
               {/* Logo dividido en icono + texto con clics separados */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mr: { xs: 1, sm: 1.5, md: 2 } }}>
                 {/* Icono con animación */}
                 <Box
                   component="img"
@@ -356,9 +361,9 @@ const Dashboard = () => {
                   className={`logo-icon ${isAnimating ? 'logo-icon-animated' : ''}`}
                   onClick={handleIconClick}
                   sx={{
-                    height: 70, // Altura del icono
+                    height: { xs: 50, sm: 60, md: 70 }, // Altura responsiva del icono
                     width: 'auto',
-                    mr: 1, // Pequeño margen entre icono y texto
+                    mr: 1,
                     cursor: 'pointer'
                   }}
                 />
@@ -370,7 +375,7 @@ const Dashboard = () => {
                   alt="Alimetria"
                   onClick={handleTextClick}
                   sx={{
-                    height: 70, // Altura del texto
+                    height: { xs: 50, sm: 60, md: 70 }, // Altura responsiva del texto
                     width: 'auto',
                     cursor: 'pointer',
                     transition: 'opacity 0.3s ease',
@@ -382,11 +387,20 @@ const Dashboard = () => {
               </Box>
 
               {/* Navigation Tabs */}
-              <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ 
+                flexGrow: 1, 
+                display: 'flex',
+                justifyContent: { xs: 'center', sm: 'flex-start' },
+                minWidth: 0 // Permite que el contenido se comprima
+              }}>
                 <Tabs
                   value={activeTab === -1 ? false : activeTab}
                   onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  allowScrollButtonsMobile
                   sx={{
+                    flex: 1,
                     '& .MuiTabs-indicator': {
                       backgroundColor: '#667eea',
                       height: 2,
@@ -395,11 +409,11 @@ const Dashboard = () => {
                     '& .MuiTab-root': {
                       minHeight: 48,
                       textTransform: 'none',
-                      fontSize: '0.875rem',
+                      fontSize: { xs: '0.75rem', sm: '0.825rem', md: '0.875rem' },
                       fontWeight: 500,
                       color: darkMode ? 'rgba(156, 163, 175, 1)' : 'rgba(107, 114, 128, 1)',
-                      minWidth: 'auto',
-                      px: 2.5,
+                      minWidth: { xs: 48, sm: 'auto' }, // Mínimo ancho en móviles
+                      px: { xs: 1, sm: 2, md: 2.5 },
                       fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
                       '&.Mui-selected': {
                         color: darkMode ? '#ffffff' : '#1a1a1a',
@@ -411,39 +425,55 @@ const Dashboard = () => {
                     }
                   }}
                 >
-                  {availableTabs.map((tab, index) => (
-                    <Tab
-                      key={index}
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {tab.icon}
-                          {tab.title}
-                          {tab.isDropdown && <ExpandMoreIcon sx={{ fontSize: '1rem' }} />}
-                        </Box>
-                      }
-                      onClick={tab.isDropdown ? handleRecursosTabClick : undefined}
-                    />
-                  ))}
+                  {availableTabs.map((tab, index) => {
+                    // En móviles, usamos Tooltip solo si no hay texto visible
+                    const showTooltipOnMobile = true;
+                    
+                    return (
+                      <Tooltip 
+                        key={index}
+                        title={tab.title} 
+                        placement="bottom"
+                        disableHoverListener={false} // Siempre habilitado
+                        enterTouchDelay={0}
+                      >
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 0.75, md: 1 } }}>
+                              {React.cloneElement(tab.icon, {
+                                sx: { fontSize: { xs: '1.1rem', sm: '1.05rem', md: '1.1rem' } }
+                              })}
+                              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                {tab.title}
+                              </Box>
+                              {tab.isDropdown && <ExpandMoreIcon sx={{ fontSize: { xs: '0.8rem', sm: '0.95rem', md: '1rem' } }} />}
+                            </Box>
+                          }
+                          onClick={tab.isDropdown ? handleRecursosTabClick : undefined}
+                        />
+                      </Tooltip>
+                    );
+                  })}
                 </Tabs>
               </Box>
 
               {/* Right section */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.25, sm: 0.5 } }}>
                 
                 {/* Search */}
                 <Button
                   variant="outlined"
-                  startIcon={<SearchIcon sx={{ fontSize: '1rem' }} />}
+                  startIcon={<SearchIcon sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }} />}
                   sx={{
                     borderColor: darkMode ? '#374151' : '#e5e7eb',
                     color: darkMode ? 'rgba(156, 163, 175, 1)' : 'rgba(107, 114, 128, 1)',
                     textTransform: 'none',
-                    fontSize: '0.875rem',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
                     fontWeight: 400,
-                    px: 2,
+                    px: { xs: 1, sm: 1.5, md: 2 },
                     py: 0.75,
                     borderRadius: 2,
-                    minWidth: 100,
+                    minWidth: { xs: 80, sm: 90, md: 100 },
                     justifyContent: 'flex-start',
                     fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
                     '&:hover': {
@@ -452,7 +482,9 @@ const Dashboard = () => {
                     }
                   }}
                 >
-                  Buscar...
+                  <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                    Buscar...
+                  </Box>
                 </Button>
 
                 {/* Theme Toggle */}
@@ -477,9 +509,9 @@ const Dashboard = () => {
                   sx={{
                     textTransform: 'none',
                     color: darkMode ? '#ffffff' : '#1a1a1a',
-                    fontSize: '0.875rem',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
                     fontWeight: 500,
-                    px: 2,
+                    px: { xs: 1, sm: 1.5, md: 2 },
                     py: 1,
                     borderRadius: 2,
                     fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -528,10 +560,10 @@ const Dashboard = () => {
                   }}
                   startIcon={
                     <Avatar sx={{ 
-                      width: 24, 
-                      height: 24, 
+                      width: { xs: 20, sm: 22, md: 24 }, 
+                      height: { xs: 20, sm: 22, md: 24 }, 
                       bgcolor: '#667eea',
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' },
                       fontWeight: 600,
                       // Efecto glassmorphism en el avatar también
                       boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
@@ -541,7 +573,9 @@ const Dashboard = () => {
                     </Avatar>
                   }
                 >
-                  {user?.nombre || 'Administrador'}
+                  <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                    {user?.nombre || 'Administrador'}
+                  </Box>
                 </Button>
                 
                 {/* Menu de usuario */}
