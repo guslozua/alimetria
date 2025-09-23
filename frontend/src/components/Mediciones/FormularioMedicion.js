@@ -16,13 +16,27 @@ import {
   CircularProgress,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Chip,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
   ExpandMore as ExpandMoreIcon,
-  CameraAlt as InBodyIcon
+  CameraAlt as InBodyIcon,
+  Info as InfoIcon,
+  Close as CloseIcon,
+  HelpOutline as HelpIcon,
+  RadioButtonUnchecked as BulletIcon
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -38,6 +52,10 @@ const FormularioMedicion = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [paciente, setPaciente] = useState(null);
+  
+  // Estados para los tooltips
+  const [tooltipOpen, setTooltipOpen] = useState(null);
+  const [showBasicPrinciples, setShowBasicPrinciples] = useState(false);
   
   const [formData, setFormData] = useState({
     paciente_id: pacienteId || '',
@@ -72,6 +90,255 @@ const FormularioMedicion = () => {
     puntuacion_corporal: '',
     observaciones: ''
   });
+
+  // Información detallada para cada campo de medición
+  const medicionesInfo = {
+    // Perímetros
+    perimetro_cintura: {
+      title: "Perímetro de Cintura",
+      category: "perimetros",
+      description: "Circunferencia de la cintura en su punto más estrecho",
+      instructions: "Medir en el punto más estrecho del torso, generalmente entre la última costilla y la cresta ilíaca, al final de una espiración normal.",
+      technique: "Cinta métrica horizontal, sin comprimir",
+      reference: "Punto más estrecho del torso",
+      normalRange: "Hombres: <94cm | Mujeres: <80cm (riesgo bajo)"
+    },
+    perimetro_cadera: {
+      title: "Perímetro de Cadera",
+      category: "perimetros",
+      description: "Circunferencia máxima de la cadera",
+      instructions: "Medir en el punto de mayor prominencia de los glúteos, manteniendo la cinta métrica en posición horizontal.",
+      technique: "Cinta métrica horizontal",
+      reference: "Mayor prominencia glútea",
+      normalRange: "Variable según constitución corporal"
+    },
+    perimetro_cuello: {
+      title: "Perímetro del Cuello",
+      category: "perimetros",
+      description: "Circunferencia del cuello por debajo de la nuez",
+      instructions: "Pasar la cinta por debajo de la prominencia laríngea (nuez de Adán), sin comprimir, cabeza en posición erecta.",
+      technique: "Cinta métrica horizontal alrededor del cuello",
+      reference: "Por debajo de la prominencia laríngea",
+      normalRange: "Hombres: 35-43cm | Mujeres: 32-38cm"
+    },
+    perimetro_brazo_derecho: {
+      title: "Perímetro Brazo Derecho",
+      category: "perimetros",
+      description: "Circunferencia máxima del brazo derecho",
+      instructions: "Medir en el punto de mayor circunferencia del brazo, con el músculo en estado relajado y el brazo colgando naturalmente.",
+      technique: "Cinta métrica perpendicular al eje del brazo",
+      reference: "Mayor circunferencia del brazo derecho",
+      normalRange: "Hombres: 28-40cm | Mujeres: 25-35cm"
+    },
+    perimetro_brazo_izquierdo: {
+      title: "Perímetro Brazo Izquierdo",
+      category: "perimetros",
+      description: "Circunferencia máxima del brazo izquierdo",
+      instructions: "Medir en el punto de mayor circunferencia del brazo, con el músculo en estado relajado y el brazo colgando naturalmente.",
+      technique: "Cinta métrica perpendicular al eje del brazo",
+      reference: "Mayor circunferencia del brazo izquierdo",
+      normalRange: "Hombres: 28-40cm | Mujeres: 25-35cm"
+    },
+    perimetro_muslo_derecho: {
+      title: "Perímetro Muslo Derecho",
+      category: "perimetros",
+      description: "Circunferencia máxima del muslo derecho",
+      instructions: "Medir en el punto de mayor circunferencia del muslo derecho, aproximadamente en el tercio superior.",
+      technique: "Cinta métrica perpendicular al eje del muslo",
+      reference: "Punto de mayor circunferencia del muslo",
+      normalRange: "Hombres: 50-65cm | Mujeres: 45-60cm"
+    },
+    perimetro_muslo_izquierdo: {
+      title: "Perímetro Muslo Izquierdo",
+      category: "perimetros",
+      description: "Circunferencia máxima del muslo izquierdo",
+      instructions: "Medir en el punto de mayor circunferencia del muslo izquierdo, aproximadamente en el tercio superior.",
+      technique: "Cinta métrica perpendicular al eje del muslo",
+      reference: "Punto de mayor circunferencia del muslo",
+      normalRange: "Hombres: 50-65cm | Mujeres: 45-60cm"
+    },
+    // Pliegues
+    pliegue_bicipital: {
+      title: "Pliegue Bicipital",
+      category: "pliegues",
+      description: "Pliegue vertical en la parte anterior del brazo",
+      instructions: "Tomar el pliegue en la parte anterior del músculo bíceps, en el punto medio entre el acromion y la fosa cubital.",
+      technique: "Pliegue vertical en la cara anterior del músculo",
+      reference: "Punto medio entre acromion y fosa cubital",
+      normalRange: "Hombres: 3-8mm | Mujeres: 6-16mm"
+    },
+    pliegue_tricipital: {
+      title: "Pliegue Tricipital",
+      category: "pliegues",
+      description: "Pliegue vertical en la parte posterior del brazo",
+      instructions: "Tomar el pliegue en la parte posterior del músculo tríceps, en el punto medio entre el acromion y el olécranon.",
+      technique: "Pliegue vertical en la cara posterior del músculo",
+      reference: "Punto medio entre acromion y olécranon",
+      normalRange: "Hombres: 5-12mm | Mujeres: 8-25mm"
+    },
+    pliegue_subescapular: {
+      title: "Pliegue Subescapular",
+      category: "pliegues",
+      description: "Pliegue oblicuo bajo el ángulo inferior de la escápula",
+      instructions: "Localizar el ángulo inferior de la escápula. El pliegue se toma en dirección oblicua, siguiendo la línea natural de los músculos dorsales.",
+      technique: "Pliegue oblicuo siguiendo líneas naturales",
+      reference: "Ángulo inferior de la escápula",
+      normalRange: "Hombres: 6-15mm | Mujeres: 8-20mm"
+    },
+    pliegue_suprailiaco: {
+      title: "Pliegue Suprailíaco",
+      category: "pliegues",
+      description: "Pliegue oblicuo sobre la cresta ilíaca",
+      instructions: "Localizar la cresta ilíaca anterior superior. El pliegue se toma en dirección oblicua, aproximadamente 2cm por encima de la cresta.",
+      technique: "Pliegue oblicuo sobre cresta ilíaca",
+      reference: "Cresta ilíaca anterior superior",
+      normalRange: "Hombres: 4-20mm | Mujeres: 6-25mm"
+    },
+    pliegue_abdominal: {
+      title: "Pliegue Abdominal",
+      category: "pliegues",
+      description: "Pliegue vertical lateral al ombligo",
+      instructions: "Tomar el pliegue verticalmente, aproximadamente 2cm lateral al ombligo, en el lado derecho del paciente.",
+      technique: "Pliegue vertical lateral al ombligo",
+      reference: "2cm lateral al ombligo (lado derecho)",
+      normalRange: "Hombres: 5-25mm | Mujeres: 8-30mm"
+    },
+    pliegue_muslo: {
+      title: "Pliegue del Muslo",
+      category: "pliegues",
+      description: "Pliegue vertical en la cara anterior del muslo",
+      instructions: "Tomar el pliegue en la cara anterior del muslo, en el punto medio entre el pliegue inguinal y el borde superior de la rótula.",
+      technique: "Pliegue vertical en cara anterior",
+      reference: "Punto medio entre ingle y rótula",
+      normalRange: "Hombres: 4-15mm | Mujeres: 8-25mm"
+    }
+  };
+
+  const principiosBasicos = [
+    "Utilizar calibrador de pliegues calibrado (precisión ±0.1mm)",
+    "Usar cinta métrica inextensible para perímetros",
+    "Tomar medidas siempre del lado derecho (excepto cuando se especifique ambos lados)",
+    "Realizar 2-3 mediciones consecutivas y usar el promedio",
+    "Mantener al paciente en posición anatómica estándar"
+  ];
+
+  // Componente para el ícono de información
+  const InfoTooltip = ({ fieldName, sx = {} }) => {
+    if (!medicionesInfo[fieldName]) return null;
+    
+    return (
+      <IconButton
+        size="small"
+        onClick={() => setTooltipOpen(fieldName)}
+        sx={{
+          ml: 1,
+          color: 'primary.main',
+          '&:hover': {
+            backgroundColor: 'primary.light',
+            color: 'white',
+            transform: 'scale(1.1)'
+          },
+          transition: 'all 0.2s ease',
+          ...sx
+        }}
+      >
+        <InfoIcon fontSize="small" />
+      </IconButton>
+    );
+  };
+
+  // Componente para el modal de información
+  const TooltipModal = () => {
+    if (!tooltipOpen || !medicionesInfo[tooltipOpen]) return null;
+    
+    const info = medicionesInfo[tooltipOpen];
+    const categoryColor = info.category === 'pliegues' ? 'error' : 'info';
+    const categoryLabel = info.category === 'pliegues' ? 'Pliegues Cutáneos' : 'Perímetros';
+
+    return (
+      <Dialog
+        open={Boolean(tooltipOpen)}
+        onClose={() => setTooltipOpen(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={categoryLabel}
+                color={categoryColor}
+                size="small"
+              />
+              <Typography variant="h6" component="span">
+                {info.title}
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setTooltipOpen(null)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" color="primary" gutterBottom>
+                Descripción:
+              </Typography>
+              <Typography variant="body2">
+                {info.description}
+              </Typography>
+            </Box>
+            
+            <Box>
+              <Typography variant="subtitle2" color="primary" gutterBottom>
+                Instrucciones:
+              </Typography>
+              <Typography variant="body2">
+                {info.instructions}
+              </Typography>
+            </Box>
+            
+            <Box>
+              <Typography variant="subtitle2" color="primary" gutterBottom>
+                Técnica:
+              </Typography>
+              <Typography variant="body2">
+                {info.technique}
+              </Typography>
+            </Box>
+            
+            <Box>
+              <Typography variant="subtitle2" color="primary" gutterBottom>
+                Punto de referencia:
+              </Typography>
+              <Typography variant="body2">
+                {info.reference}
+              </Typography>
+            </Box>
+            
+            <Box 
+              sx={{ 
+                p: 2, 
+                bgcolor: 'success.light', 
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'success.main'
+              }}
+            >
+              <Typography variant="subtitle2" color="success.dark" gutterBottom>
+                Valores normales:
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'success.dark' }}>
+                {info.normalRange}
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   // Función para normalizar valores - convertir null/undefined a string vacío
   const normalizarValor = (valor) => {
@@ -449,81 +716,102 @@ const FormularioMedicion = () => {
                     <AccordionDetails>
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_cintura"
-                            label="Cintura"
-                            type="number"
-                            value={formData.perimetro_cintura}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_cintura"
+                              label="Cintura"
+                              type="number"
+                              value={formData.perimetro_cintura}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_cintura" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_cadera"
-                            label="Cadera"
-                            type="number"
-                            value={formData.perimetro_cadera}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_cadera"
+                              label="Cadera"
+                              type="number"
+                              value={formData.perimetro_cadera}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_cadera" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_cuello"
-                            label="Cuello"
-                            type="number"
-                            value={formData.perimetro_cuello}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_cuello"
+                              label="Cuello"
+                              type="number"
+                              value={formData.perimetro_cuello}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_cuello" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_brazo_derecho"
-                            label="Brazo Derecho"
-                            type="number"
-                            value={formData.perimetro_brazo_derecho}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_brazo_derecho"
+                              label="Brazo Derecho"
+                              type="number"
+                              value={formData.perimetro_brazo_derecho}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_brazo_derecho" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_brazo_izquierdo"
-                            label="Brazo Izquierdo"
-                            type="number"
-                            value={formData.perimetro_brazo_izquierdo}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_brazo_izquierdo"
+                              label="Brazo Izquierdo"
+                              type="number"
+                              value={formData.perimetro_brazo_izquierdo}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_brazo_izquierdo" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_muslo_derecho"
-                            label="Muslo Derecho"
-                            type="number"
-                            value={formData.perimetro_muslo_derecho}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_muslo_derecho"
+                              label="Muslo Derecho"
+                              type="number"
+                              value={formData.perimetro_muslo_derecho}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_muslo_derecho" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="perimetro_muslo_izquierdo"
-                            label="Muslo Izquierdo"
-                            type="number"
-                            value={formData.perimetro_muslo_izquierdo}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="perimetro_muslo_izquierdo"
+                              label="Muslo Izquierdo"
+                              type="number"
+                              value={formData.perimetro_muslo_izquierdo}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="perimetro_muslo_izquierdo" />
+                          </Box>
                         </Grid>
                       </Grid>
                     </AccordionDetails>
@@ -539,70 +827,88 @@ const FormularioMedicion = () => {
                     <AccordionDetails>
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_bicipital"
-                            label="Bicipital"
-                            type="number"
-                            value={formData.pliegue_bicipital}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_bicipital"
+                              label="Bicipital"
+                              type="number"
+                              value={formData.pliegue_bicipital}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_bicipital" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_tricipital"
-                            label="Tricipital"
-                            type="number"
-                            value={formData.pliegue_tricipital}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_tricipital"
+                              label="Tricipital"
+                              type="number"
+                              value={formData.pliegue_tricipital}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_tricipital" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_subescapular"
-                            label="Subescapular"
-                            type="number"
-                            value={formData.pliegue_subescapular}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_subescapular"
+                              label="Subescapular"
+                              type="number"
+                              value={formData.pliegue_subescapular}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_subescapular" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_suprailiaco"
-                            label="Suprailiaco"
-                            type="number"
-                            value={formData.pliegue_suprailiaco}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_suprailiaco"
+                              label="Suprailiaco"
+                              type="number"
+                              value={formData.pliegue_suprailiaco}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_suprailiaco" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_abdominal"
-                            label="Abdominal"
-                            type="number"
-                            value={formData.pliegue_abdominal}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_abdominal"
+                              label="Abdominal"
+                              type="number"
+                              value={formData.pliegue_abdominal}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_abdominal" />
+                          </Box>
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField
-                            name="pliegue_muslo"
-                            label="Muslo"
-                            type="number"
-                            value={formData.pliegue_muslo}
-                            onChange={handleChange}
-                            fullWidth
-                            inputProps={{ step: 0.1 }}
-                          />
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              name="pliegue_muslo"
+                              label="Muslo"
+                              type="number"
+                              value={formData.pliegue_muslo}
+                              onChange={handleChange}
+                              fullWidth
+                              inputProps={{ step: 0.1 }}
+                            />
+                            <InfoTooltip fieldName="pliegue_muslo" />
+                          </Box>
                         </Grid>
                       </Grid>
                     </AccordionDetails>
@@ -669,6 +975,61 @@ const FormularioMedicion = () => {
                   />
                 </Grid>
 
+                {/* Principios Básicos y Nota ISAK */}
+                <Grid item xs={12}>
+                  <Accordion 
+                    expanded={showBasicPrinciples} 
+                    onChange={() => setShowBasicPrinciples(!showBasicPrinciples)}
+                  >
+                    <AccordionSummary 
+                      expandIcon={<ExpandMoreIcon />}
+                      sx={{ 
+                        backgroundColor: 'action.hover',
+                        borderRadius: 1
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <HelpIcon color="info" />
+                        <Typography variant="h6" color="info.main">
+                          Principios Básicos de Medición
+                        </Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle2" color="primary" gutterBottom>
+                          Principios fundamentales:
+                        </Typography>
+                        <List dense>
+                          {principiosBasicos.map((principio, index) => (
+                            <ListItem key={index}>
+                              <ListItemIcon>
+                                <BulletIcon fontSize="small" color="primary" />
+                              </ListItemIcon>
+                              <ListItemText primary={principio} />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                      
+                      <Divider sx={{ my: 2 }} />
+                      
+                      <Box 
+                        sx={{ 
+                          p: 2, 
+                          backgroundColor: 'grey.50',
+                          borderRadius: 1,
+                          textAlign: 'center'
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          Esta guía está basada en los estándares ISAK (International Society for the Advancement of Kinanthropometry) y adaptada para el sistema Alimetria.
+                        </Typography>
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+
                 {/* Botones */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
@@ -695,6 +1056,10 @@ const FormularioMedicion = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Modal de tooltips */}
+        <TooltipModal />
+
       </Box>
     </LocalizationProvider>
   );
