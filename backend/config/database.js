@@ -14,13 +14,9 @@ const dbConfig = {
   timezone: '-03:00'  // Zona horaria de Argentina (GMT-3)
 };
 
-// Crear pool de conexiones con configuración de zona horaria
+// Crear pool de conexiones con configuración simplificada
 const pool = mysql.createPool({
   ...dbConfig,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  queryTimeout: 30000,
-  initSql: "SET time_zone = '-03:00'",  // Forzar zona horaria de Argentina
   dateStrings: false  // Mantener objetos Date
 });
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-09-2025 a las 15:12:10
+-- Tiempo de generación: 22-09-2025 a las 14:43:26
 -- Versión del servidor: 10.4.25-MariaDB
 -- Versión de PHP: 8.2.0
 
@@ -20,6 +20,38 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `alimetria`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `categorias_suplementos`
+--
+
+CREATE TABLE `categorias_suplementos` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT '#667eea',
+  `icono` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'supplement',
+  `orden_visualizacion` int(11) DEFAULT 0,
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp(),
+  `fecha_actualizacion` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Categorías de clasificación de suplementos nutricionales';
+
+--
+-- Volcado de datos para la tabla `categorias_suplementos`
+--
+
+INSERT INTO `categorias_suplementos` (`id`, `nombre`, `descripcion`, `color`, `icono`, `orden_visualizacion`, `activo`, `fecha_creacion`, `fecha_actualizacion`) VALUES
+(1, 'Vitaminas', 'Vitaminas esenciales y complejos vitamínicos', '#FF6B6B', '🌈', 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(2, 'Minerales', 'Minerales y oligoelementos esenciales', '#4ECDC4', '⚡', 2, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(3, 'Proteínas', 'Suplementos proteicos y aminoácidos', '#45B7D1', '🥩', 3, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(4, 'Ácidos Grasos', 'Omega 3, 6, 9 y otros ácidos grasos esenciales', '#96CEB4', '🐟', 4, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(5, 'Probióticos', 'Microorganismos beneficiosos para la salud intestinal', '#FFEAA7', '💚', 5, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(6, 'Articular', 'Suplementos para la salud articular y ósea', '#DDA0DD', '🦴', 6, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(7, 'Deportivos', 'Suplementos específicos para deportistas', '#FFB347', '💪', 7, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41'),
+(8, 'Antioxidantes', 'Compuestos antioxidantes y anti-envejecimiento', '#98D8C8', '🛡️', 8, 1, '2025-09-22 00:03:41', '2025-09-22 00:03:41');
 
 -- --------------------------------------------------------
 
@@ -55,18 +87,19 @@ INSERT INTO `citas` (`id`, `paciente_id`, `nutricionista_id`, `fecha_hora`, `dur
 (2, 3, 1, '2025-09-13 17:30:00', 45, 'primera_vez', 'no_asistio', 'Evaluación inicial', NULL, 'Actualizado automáticamente - paciente no asistió', 0, NULL, 1, 1, '2025-09-11 22:19:08', '2025-09-14 22:04:12'),
 (3, 4, 1, '2025-09-14 09:00:35', 60, 'seguimiento', 'completada', 'Control mensual', 'Paciente refiere mejora en hábitos alimentarios\nCita completada exitosamente.', 'Actualizado automáticamente - paciente no asistió', 0, NULL, 1, 1, '2025-09-11 23:04:04', '2025-09-15 14:26:16'),
 (4, 3, 1, '2025-09-13 14:30:00', 45, 'primera_vez', 'no_asistio', 'Evaluación inicial', NULL, 'Actualizado automáticamente - paciente no asistió', 0, NULL, 1, 1, '2025-09-11 23:04:04', '2025-09-14 22:04:12'),
-(5, 1, 1, '2025-09-16 18:00:00', 60, 'seguimiento', 'confirmada', 'nada', '', NULL, 0, NULL, 1, 1, '2025-09-13 22:56:26', '2025-09-15 12:39:00'),
+(5, 1, 1, '2025-09-16 18:00:00', 60, 'seguimiento', 'no_asistio', 'nada', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-13 22:56:26', '2025-09-18 13:40:28'),
 (6, 5, 1, '2025-09-15 21:00:00', 60, 'control', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-13 23:18:02', '2025-09-16 17:40:10'),
-(7, 6, 1, '2025-09-17 02:00:00', 60, 'seguimiento', 'programada', '', '', NULL, 0, NULL, 1, 1, '2025-09-14 00:11:10', '2025-09-14 23:34:40'),
+(7, 6, 1, '2025-09-17 02:00:00', 60, 'seguimiento', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 00:11:10', '2025-09-18 13:40:28'),
 (8, 2, 1, '2025-09-16 00:00:00', 60, 'seguimiento', 'no_asistio', 'prueba horario', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 00:24:56', '2025-09-16 17:40:10'),
-(9, 1, 1, '2025-09-19 16:00:00', 60, 'control', 'cancelada', 'prueba horario', '', NULL, 0, NULL, 1, 1, '2025-09-14 01:15:27', '2025-09-16 17:41:45'),
-(10, 1, 1, '2025-09-16 23:00:00', 60, 'control', 'confirmada', '', '', NULL, 0, NULL, 1, 1, '2025-09-14 13:07:44', '2025-09-15 10:07:37'),
+(9, 1, 1, '2025-09-19 16:00:00', 60, 'control', 'completada', 'prueba horario', '', NULL, 0, NULL, 1, 1, '2025-09-14 01:15:27', '2025-09-19 14:12:55'),
+(10, 1, 1, '2025-09-16 23:00:00', 60, 'control', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 13:07:44', '2025-09-18 13:40:28'),
 (11, 1, 1, '2025-09-16 09:00:00', 60, 'seguimiento', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 13:39:08', '2025-09-16 17:40:10'),
-(12, 2, 1, '2025-09-17 12:00:00', 45, 'primera_vez', 'programada', '', '', NULL, 0, NULL, 1, 1, '2025-09-14 13:47:42', '2025-09-14 13:47:42'),
+(12, 2, 1, '2025-09-17 12:00:00', 45, 'primera_vez', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 13:47:42', '2025-09-18 13:40:28'),
 (13, 6, 1, '2025-09-14 22:00:00', 30, 'urgencia', 'completada', '', '', 'Actualizado automáticamente - paciente no asistió', 0, NULL, 1, 1, '2025-09-14 20:56:16', '2025-09-15 14:25:56'),
-(14, 6, 1, '2025-09-17 04:00:00', 60, 'seguimiento', 'confirmada', '', '', NULL, 0, NULL, 1, 1, '2025-09-14 22:38:53', '2025-09-16 17:40:26'),
-(15, 6, 1, '2025-09-20 19:00:00', 60, 'seguimiento', 'programada', '', '', NULL, 0, NULL, 1, 1, '2025-09-14 22:53:48', '2025-09-14 22:53:48'),
-(16, 6, 1, '2025-09-30 14:00:00', 30, 'urgencia', 'confirmada', 'pruena de horario ', '', NULL, 0, NULL, 1, 1, '2025-09-15 11:38:10', '2025-09-15 11:38:42');
+(14, 6, 1, '2025-09-17 04:00:00', 60, 'seguimiento', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 22:38:53', '2025-09-18 13:40:28'),
+(15, 6, 1, '2025-09-20 19:00:00', 60, 'seguimiento', 'no_asistio', '', '', 'Actualizado automáticamente - paciente no asistió (2h de gracia aplicadas)', 0, NULL, 1, 1, '2025-09-14 22:53:48', '2025-09-20 23:37:35'),
+(16, 6, 1, '2025-09-30 14:00:00', 30, 'urgencia', 'confirmada', 'prueba de horario ', '', NULL, 0, NULL, 1, 1, '2025-09-15 11:38:10', '2025-09-20 23:45:24'),
+(17, 6, 1, '2025-09-25 20:20:00', 45, 'seguimiento', 'programada', 'prueba desde el form de paciente', '', NULL, 0, NULL, 1, 1, '2025-09-21 19:22:12', '2025-09-21 19:22:12');
 
 -- --------------------------------------------------------
 
@@ -95,16 +128,16 @@ INSERT INTO `configuraciones` (`id`, `clave`, `valor`, `tipo`, `descripcion`, `c
 (3, 'recordatorio_dias_previos', '1', 'number', 'Días previos para enviar recordatorios', 'notificaciones', 0, '2025-09-10 12:35:00'),
 (4, 'max_file_size_mb', '10', 'number', 'Tamaño máximo de archivo en MB', 'archivos', 0, '2025-09-10 12:35:00'),
 (5, 'formatos_imagen_permitidos', '[\"jpg\", \"jpeg\", \"png\", \"pdf\"]', 'json', 'Formatos de imagen permitidos', 'archivos', 0, '2025-09-10 12:35:00'),
-(6, 'tema_color_primario', '#1976d2', 'string', 'Color primario del tema', 'interfaz', 1, '2025-09-10 12:35:00'),
+(6, 'tema_color_primario', '#1976d2', 'string', 'Color primario del tema', 'interfaz', 1, '2025-09-18 10:25:06'),
 (7, 'mostrar_demo', 'true', 'boolean', 'Mostrar datos de demostración', 'general', 1, '2025-09-10 12:35:00'),
-(8, 'email_habilitado', 'true', 'boolean', 'Habilitar/deshabilitar el envío de emails del sistema', 'notificaciones', 0, '2025-09-18 10:09:08'),
+(8, 'email_habilitado', 'false', 'boolean', 'Habilitar/deshabilitar el envío de emails del sistema', 'notificaciones', 0, '2025-09-21 13:55:30'),
 (9, 'email_host', 'smtp.gmail.com', 'string', 'Servidor SMTP para envío de emails', 'notificaciones', 0, '2025-09-18 10:09:08'),
 (10, 'email_puerto', '587', 'number', 'Puerto del servidor SMTP', 'notificaciones', 0, '2025-09-18 10:09:08'),
-(11, 'email_usuario', '', 'string', 'Usuario/email para autenticación SMTP', 'notificaciones', 0, '2025-09-18 10:09:08'),
-(12, 'email_password', '', 'string', 'Contraseña para autenticación SMTP', 'notificaciones', 0, '2025-09-18 10:09:08'),
+(11, 'email_usuario', 'guslozua@gmail.com', 'string', 'Usuario/email para autenticación SMTP', 'notificaciones', 0, '2025-09-18 10:48:21'),
+(12, 'email_password', 'qwkg evmu jydl mqqq', 'string', 'Contraseña para autenticación SMTP', 'notificaciones', 0, '2025-09-18 10:48:21'),
 (13, 'email_seguridad', 'TLS', 'string', 'Tipo de seguridad SMTP (TLS/SSL/NONE)', 'notificaciones', 0, '2025-09-18 10:09:08'),
-(14, 'email_remitente_nombre', 'Alimetria - Sistema de Nutrición', 'string', 'Nombre que aparece como remitente', 'notificaciones', 0, '2025-09-18 10:09:08'),
-(15, 'email_remitente_direccion', 'noreply@alimetria.com', 'string', 'Dirección email del remitente', 'notificaciones', 0, '2025-09-18 10:09:08'),
+(14, 'email_remitente_nombre', 'Alimetria', 'string', 'Nombre que aparece como remitente', 'notificaciones', 0, '2025-09-18 10:48:21'),
+(15, 'email_remitente_direccion', 'guslozua@gmail.com', 'string', 'Dirección email del remitente', 'notificaciones', 0, '2025-09-18 10:48:21'),
 (16, 'recordatorios_automaticos', 'true', 'boolean', 'Enviar recordatorios automáticos de citas', 'notificaciones', 0, '2025-09-18 10:09:08'),
 (17, 'notificaciones_cumpleanos', 'true', 'boolean', 'Enviar felicitaciones de cumpleaños a pacientes', 'notificaciones', 0, '2025-09-18 10:09:08'),
 (18, 'backup_automatico', 'false', 'boolean', 'Realizar respaldos automáticos de la base de datos', 'sistema', 0, '2025-09-18 10:09:08'),
@@ -166,6 +199,14 @@ CREATE TABLE `fotos_pacientes` (
   `usuario_id` int(11) DEFAULT NULL COMMENT 'Usuario que subió la foto',
   `activo` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `fotos_pacientes`
+--
+
+INSERT INTO `fotos_pacientes` (`id`, `paciente_id`, `ruta_imagen`, `tipo_foto`, `descripcion`, `peso_momento`, `medicion_relacionada_id`, `fecha`, `usuario_id`, `activo`) VALUES
+(1, 6, 'evolucion-paciente-6-1758496997012-215447.jpeg', 'frontal', 'priemar foto, prueba', '105.00', NULL, '2025-09-21 20:23:17', 1, 1),
+(2, 6, 'evolucion-paciente-6-1758497855822-587947.jpg', 'frontal', '2 foto', '105.00', NULL, '2025-09-21 20:37:35', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -289,13 +330,13 @@ CREATE TABLE `notificaciones` (
 --
 
 INSERT INTO `notificaciones` (`id`, `tipo`, `titulo`, `mensaje`, `destinatario_id`, `paciente_relacionado_id`, `cita_relacionada_id`, `leida`, `enviado_email`, `fecha_programada`, `fecha_enviada`, `fecha_leida`, `activo`) VALUES
-(1, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el lunes, 15 de septiembre de 2025, 17:00.', 1, 2, 8, 0, 1, '2025-09-14 17:00:00', '2025-09-14 23:35:05', NULL, 1),
+(1, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el lunes, 15 de septiembre de 2025, 17:00.', 1, 2, 8, 1, 1, '2025-09-14 17:00:00', '2025-09-14 23:35:05', '2025-09-19 17:33:16', 1),
 (2, 'sistema', 'Sistema de notificaciones activo', 'El sistema de notificaciones de Alimetria está funcionando correctamente. Esta es una notificación de prueba.', 1, NULL, NULL, 1, 1, '2025-09-14 00:55:30', '2025-09-14 23:35:03', '2025-09-16 00:21:27', 1),
-(3, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el viernes, 19 de septiembre de 2025, 16:00.', 1, 1, 9, 0, 0, '2025-09-18 16:00:00', NULL, NULL, 1),
+(3, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el viernes, 19 de septiembre de 2025, 16:00.', 1, 1, 9, 1, 1, '2025-09-18 16:00:00', '2025-09-18 16:00:02', '2025-09-19 17:33:18', 1),
 (4, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el lunes, 15 de septiembre de 2025, 17:00.', 1, 1, 10, 1, 1, '2025-09-14 17:00:00', '2025-09-14 23:35:08', '2025-09-16 00:21:44', 1),
 (5, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el miércoles, 17 de septiembre de 2025, 12:00.', 1, 2, 12, 0, 0, '2025-09-16 12:00:00', NULL, NULL, 0),
-(6, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el miércoles, 17 de septiembre de 2025, 15:00.', 1, 6, 14, 0, 1, '2025-09-16 15:00:00', '2025-09-16 15:00:03', NULL, 1),
-(7, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el sábado, 20 de septiembre de 2025, 19:00.', 1, 6, 15, 0, 0, '2025-09-19 19:00:00', NULL, NULL, 1);
+(6, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el miércoles, 17 de septiembre de 2025, 15:00.', 1, 6, 14, 1, 1, '2025-09-16 15:00:00', '2025-09-16 15:00:03', '2025-09-18 13:33:51', 1),
+(7, 'cita_recordatorio', 'Recordatorio de Cita', 'Tienes una cita programada para el sábado, 20 de septiembre de 2025, 19:00.', 1, 6, 15, 0, 1, '2025-09-19 19:00:00', '2025-09-19 19:00:03', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -383,7 +424,7 @@ INSERT INTO `pacientes` (`id`, `nombre`, `apellido`, `sexo`, `fecha_nacimiento`,
 (3, 'Carlitos', 'Rodríguez', 'M', '1978-11-08', '(381) 345-6789', 'carlos.rodriguez@email.com', 'Barrio Norte, Tucumán', 'Contador', NULL, '180.20', '95.70', 'Perder peso por recomendación médica', NULL, 1, NULL, 1, 1, 1, '2025-09-10 12:44:56', '2025-09-11 17:41:20'),
 (4, 'Anita', 'Martínez', 'F', '1995-02-14', '(381) 456-7890', 'ana.martinez@email.com', 'Villa Mariano Moreno, Tucumán', 'Estudiante', NULL, '158.50', '55.20', 'Ganar masa muscular', NULL, 1, NULL, 1, 1, 1, '2025-09-10 12:44:56', '2025-09-11 17:41:20'),
 (5, 'Roberto', 'Silva', 'M', '1988-09-30', '(381) 567-8901', 'roberto.silva@email.com', 'Centro, San Miguel de Tucumán', 'Comerciante', NULL, '172.80', '78.40', 'Mejorar composición corporal', NULL, 1, NULL, 1, 1, 1, '2025-09-10 12:44:56', '2025-09-11 17:41:20'),
-(6, 'Sergio', 'Lozua', 'M', '1977-07-27', '03816503889', 'sdgsdg@sgsdg.com', 'Avenida silvano Bores 297', 'va', NULL, '180.00', '105.00', NULL, NULL, 3, '1234567833', NULL, 1, 1, '2025-09-11 09:58:30', '2025-09-15 23:12:57');
+(6, 'Sergio', 'Lozua', 'M', '1977-07-27', '03816503889', 'sdgsdg@sgsdg.com', 'Avenida silvano Bores 297', 'va', 'paciente-6-1758424426910.jpg', '180.00', '105.00', NULL, NULL, 3, '1234567833', NULL, 1, 1, '2025-09-11 09:58:30', '2025-09-21 13:53:22');
 
 -- --------------------------------------------------------
 
@@ -437,6 +478,225 @@ INSERT INTO `roles` (`id`, `nombre`, `descripcion`, `permisos`, `activo`, `fecha
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `suplementos`
+--
+
+CREATE TABLE `suplementos` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre_cientifico` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `categoria_id` int(11) NOT NULL,
+  `descripcion_corta` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `descripcion_detallada` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `para_que_sirve` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `beneficios_principales` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`beneficios_principales`)),
+  `dosis_recomendada` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dosis_minima` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `dosis_maxima` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `forma_presentacion` enum('cápsula','tableta','polvo','líquido','goma','inyectable','tópico') COLLATE utf8mb4_unicode_ci DEFAULT 'cápsula',
+  `frecuencia_recomendada` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mejor_momento_toma` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duracion_tratamiento_tipica` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `popularidad_uso` int(11) DEFAULT 0,
+  `nivel_evidencia` enum('alta','media','baja','experimental') COLLATE utf8mb4_unicode_ci DEFAULT 'media',
+  `precio_referencial` decimal(8,2) DEFAULT NULL,
+  `activo` tinyint(4) DEFAULT 1,
+  `destacado` tinyint(4) DEFAULT 0,
+  `fecha_creacion` datetime DEFAULT current_timestamp(),
+  `fecha_actualizacion` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla principal con información básica de suplementos';
+
+--
+-- Volcado de datos para la tabla `suplementos`
+--
+
+INSERT INTO `suplementos` (`id`, `nombre`, `nombre_cientifico`, `categoria_id`, `descripcion_corta`, `descripcion_detallada`, `para_que_sirve`, `beneficios_principales`, `dosis_recomendada`, `dosis_minima`, `dosis_maxima`, `forma_presentacion`, `frecuencia_recomendada`, `mejor_momento_toma`, `duracion_tratamiento_tipica`, `popularidad_uso`, `nivel_evidencia`, `precio_referencial`, `activo`, `destacado`, `fecha_creacion`, `fecha_actualizacion`) VALUES
+(1, 'Multivitamínicos', NULL, 1, 'Combinación de vitaminas y minerales esenciales en una sola fórmula', 'Los multivitamínicos son suplementos que contienen una combinación de vitaminas y minerales esenciales que el cuerpo necesita para funcionar correctamente. Están diseñados para complementar la dieta cuando no se obtienen suficientes nutrientes de los alimentos.', 'Personas con dietas poco equilibradas, adultos mayores, pacientes en recuperación, personas con restricciones alimentarias', '[\"Corrige deficiencias nutricionales\", \"Mejora energía y vitalidad\", \"Apoya sistema inmune\", \"Facilita metabolismo celular\", \"Previene anemias por deficiencia\"]', '1 tableta al día con la comida principal', NULL, NULL, 'tableta', '1 vez al día', 'Con desayuno o almuerzo', 'Uso continuo', 82, 'alta', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(2, 'Vitamina D3', NULL, 1, 'Vitamina esencial para la salud ósea, sistema inmune y regulación hormonal', 'La vitamina D3 (colecalciferol) es crucial para la absorción de calcio, el fortalecimiento óseo y tiene funciones importantes en el sistema inmune y la regulación hormonal. La deficiencia es muy común debido a la falta de exposición solar.', 'Deficiencia muy común en adultos, personas con poca exposición solar, osteoporosis, síndrome metabólico', '[\"Fortalece huesos y dientes\", \"Mejora absorción de calcio\", \"Apoya sistema inmunológico\", \"Regula estado de ánimo\", \"Previene osteoporosis\"]', '1000-4000 UI por día (según niveles en sangre)', NULL, NULL, 'cápsula', '1 vez al día', 'Con una comida que contenga grasas', 'Uso continuo con monitoreo', 88, 'alta', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(3, 'Omega 3 (EPA/DHA)', NULL, 4, 'Ácidos grasos esenciales para la salud cardiovascular, función cerebral y control de inflamación', 'Los ácidos grasos Omega 3, especialmente EPA y DHA, son fundamentales para la salud cardiovascular, función cerebral, desarrollo ocular y control de procesos inflamatorios. El cuerpo no puede producirlos, por lo que deben obtenerse de la dieta o suplementación.', 'Hipercolesterolemia, triglicéridos altos, riesgo cardiovascular, deportistas, función cognitiva, inflamación crónica', '[\"Reduce colesterol y triglicéridos\", \"Protege corazón y arterias\", \"Mejora función cerebral\", \"Reduce inflamación\", \"Apoya salud ocular\", \"Mejora estado de ánimo\"]', '1-3 gramos de EPA/DHA por día', NULL, NULL, 'cápsula', '1-2 veces al día', 'Con las comidas principales', 'Uso continuo', 95, 'alta', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(4, 'Proteína en Polvo', NULL, 3, 'Suplemento proteico para construcción y reparación muscular', 'Las proteínas en polvo (suero, vegetal, caseína) proporcionan aminoácidos esenciales necesarios para la síntesis de proteínas musculares, recuperación post-ejercicio y mantenimiento de masa muscular, especialmente útil cuando la ingesta dietética es insuficiente.', 'Deportistas, pacientes con sarcopenia, recuperación post-quirúrgica, adultos mayores, dietas hiperproteicas', '[\"Construye y repara músculos\", \"Acelera recuperación post-ejercicio\", \"Mantiene masa muscular\", \"Facilita pérdida de grasa\", \"Mejora composición corporal\"]', '25-50 gramos por porción (1-2 porciones/día)', NULL, NULL, 'polvo', '1-3 veces al día', 'Post-entreno y entre comidas', 'Según objetivos (3-6 meses típico)', 75, 'alta', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(5, 'Calcio', NULL, 2, 'Mineral esencial para la salud ósea, muscular y función nerviosa', 'El calcio es el mineral más abundante en el cuerpo y es fundamental para la formación y mantenimiento de huesos y dientes. También juega roles críticos en la contracción muscular, función nerviosa y coagulación sanguínea.', 'Osteopenia, osteoporosis, mujeres postmenopáusicas, adolescentes en crecimiento, deficiencia dietética', '[\"Fortalece huesos y dientes\", \"Previene osteoporosis\", \"Mejora contracción muscular\", \"Apoya función nerviosa\", \"Ayuda en coagulación\"]', '500-1200 mg por día (según edad y sexo)', NULL, NULL, 'tableta', '2-3 veces al día', 'Con comidas para mejor absorción', 'Uso continuo', 58, 'alta', NULL, 1, 0, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(6, 'Hierro', NULL, 2, 'Mineral esencial para la prevención y tratamiento de anemia ferropénica', 'El hierro es crucial para la formación de hemoglobina y el transporte de oxígeno en sangre. La deficiencia de hierro es una de las carencias nutricionales más comunes, especialmente en mujeres en edad fértil.', 'Mujeres en edad fértil, embarazadas, vegetarianos estrictos, anemia ferropénica, donantes frecuentes de sangre', '[\"Previene y trata anemia\", \"Mejora transporte de oxígeno\", \"Reduce fatiga y cansancio\", \"Apoya función cognitiva\", \"Fortalece sistema inmune\"]', '18-65 mg por día (según deficiencia)', NULL, NULL, 'tableta', '1 vez al día', 'En ayunas o con vitamina C', '3-6 meses bajo supervisión', 65, 'alta', NULL, 1, 0, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(7, 'Probióticos', NULL, 5, 'Bacterias beneficiosas para el equilibrio de la microbiota intestinal', 'Los probióticos son microorganismos vivos que, cuando se administran en cantidades adecuadas, confieren beneficios para la salud del huésped, principalmente mejorando el equilibrio de la microbiota intestinal.', 'Disbiosis intestinal, post-tratamiento antibiótico, síndrome de intestino irritable, diarreas, apoyo inmunológico', '[\"Equilibra microbiota intestinal\", \"Mejora digestión\", \"Fortalece sistema inmune\", \"Reduce inflamación intestinal\", \"Previene diarreas\"]', '1-10 billones de UFC por día', NULL, NULL, 'cápsula', '1-2 veces al día', 'Con o sin comida (según cepa)', '4-8 semanas iniciales', 78, 'media', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(8, 'Colágeno Hidrolizado', NULL, 6, 'Proteína específica para la salud articular, piel y tejidos conectivos', 'El colágeno hidrolizado es una forma procesada de colágeno que se absorbe más fácilmente. Es la proteína más abundante en el cuerpo y componente principal de cartílagos, huesos, piel, tendones y ligamentos.', 'Artritis, desgaste articular, envejecimiento de la piel, recuperación de lesiones, estética anti-edad', '[\"Mejora salud articular\", \"Reduce dolor artrítico\", \"Fortalece piel y cabello\", \"Acelera cicatrización\", \"Mantiene elasticidad\"]', '10-20 gramos por día', NULL, NULL, 'polvo', '1 vez al día', 'En ayunas o antes de dormir', 'Mínimo 3 meses para ver efectos', 45, 'media', NULL, 1, 0, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(9, 'Creatina', NULL, 7, 'Compuesto que aumenta la fuerza, potencia y rendimiento muscular', 'La creatina es un compuesto natural que se encuentra en los músculos y ayuda a producir energía durante ejercicios de alta intensidad. Es uno de los suplementos deportivos más estudiados y efectivos.', 'Deportistas, entrenamiento de fuerza, adultos mayores con pérdida de masa muscular, deportes explosivos', '[\"Aumenta fuerza y potencia\", \"Mejora rendimiento anaeróbico\", \"Acelera recuperación\", \"Incrementa masa muscular\", \"Mejora función cognitiva\"]', '3-5 gramos por día', NULL, NULL, 'polvo', '1 vez al día', 'Post-entreno o cualquier momento', 'Uso continuo durante entrenamientos', 91, 'alta', NULL, 1, 1, '2025-09-22 00:03:41', '2025-09-22 00:04:34'),
+(10, 'BCAA (Aminoácidos Ramificados)', NULL, 3, 'Aminoácidos esenciales que disminuyen la fatiga muscular y favorecen la recuperación', 'Los BCAA (Leucina, Isoleucina, Valina) son aminoácidos esenciales que el cuerpo no puede producir. Son especialmente importantes para la síntesis de proteínas musculares y pueden reducir la fatiga durante el ejercicio.', 'Deportistas en entrenamientos intensos, personas con dietas bajas en proteína, ejercicios de resistencia prolongados', '[\"Reduce fatiga muscular\", \"Acelera recuperación\", \"Previene catabolismo\", \"Mejora resistencia\", \"Apoya síntesis proteica\"]', '5-15 gramos por día (2:1:1 ratio)', NULL, NULL, 'polvo', '2-3 veces al día', 'Antes, durante y post-entreno', 'Durante períodos de entrenamiento intenso', 42, 'media', NULL, 1, 0, '2025-09-22 00:03:41', '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suplemento_contraindicaciones`
+--
+
+CREATE TABLE `suplemento_contraindicaciones` (
+  `id` int(11) NOT NULL,
+  `suplemento_id` int(11) NOT NULL,
+  `tipo` enum('contraindicacion','precaucion','advertencia') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `poblacion_afectada` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `severidad` enum('alta','media','baja') COLLATE utf8mb4_unicode_ci DEFAULT 'media',
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Contraindicaciones, precauciones y advertencias';
+
+--
+-- Volcado de datos para la tabla `suplemento_contraindicaciones`
+--
+
+INSERT INTO `suplemento_contraindicaciones` (`id`, `suplemento_id`, `tipo`, `descripcion`, `poblacion_afectada`, `severidad`, `activo`, `fecha_creacion`) VALUES
+(1, 3, 'contraindicacion', 'Alergia conocida al pescado, mariscos o componentes del suplemento', 'Pacientes con alergias alimentarias', 'alta', 1, '2025-09-22 00:04:34'),
+(2, 3, 'precaucion', 'Trastornos hemorrágicos activos o uso de anticoagulantes orales', 'Pacientes con warfarina, heparina, dabigatrán', 'alta', 1, '2025-09-22 00:04:34'),
+(3, 3, 'precaucion', 'Cirugías programadas en las próximas 2 semanas', 'Pacientes pre-quirúrgicos', 'media', 1, '2025-09-22 00:04:34'),
+(4, 3, 'advertencia', 'Puede elevar ligeramente los niveles de glucosa en sangre', 'Diabéticos tipo 2', 'baja', 1, '2025-09-22 00:04:34'),
+(5, 3, 'precaucion', 'Interacción con medicamentos hipotensores', 'Pacientes hipertensos medicados', 'media', 1, '2025-09-22 00:04:34'),
+(6, 2, 'contraindicacion', 'Hipercalcemia o niveles muy altos de vitamina D', 'Pacientes con vitamina D >80 ng/mL', 'alta', 1, '2025-09-22 00:04:34'),
+(7, 2, 'precaucion', 'Cálculos renales de calcio recurrentes', 'Pacientes con nefrolitiasis', 'media', 1, '2025-09-22 00:04:34'),
+(8, 2, 'precaucion', 'Sarcoidosis u otras enfermedades granulomatosas', 'Pacientes con trastornos del metabolismo del calcio', 'media', 1, '2025-09-22 00:04:34'),
+(9, 2, 'advertencia', 'Interacción con diuréticos tiazídicos', 'Pacientes hipertensos con ciertos medicamentos', 'baja', 1, '2025-09-22 00:04:34'),
+(10, 1, 'precaucion', 'Exceso de vitaminas liposolubles (A, D, E, K)', 'Personas que ya toman suplementos individuales', 'media', 1, '2025-09-22 00:04:34'),
+(11, 1, 'precaucion', 'Hemochromatosis o sobrecarga de hierro', 'Pacientes con trastornos del metabolismo del hierro', 'alta', 1, '2025-09-22 00:04:34'),
+(12, 1, 'advertencia', 'No reemplaza una dieta equilibrada', 'Población general', 'baja', 1, '2025-09-22 00:04:34'),
+(13, 9, 'precaucion', 'Enfermedad renal preexistente', 'Pacientes con insuficiencia renal', 'alta', 1, '2025-09-22 00:04:34'),
+(14, 9, 'precaucion', 'Deshidratación o ingesta insuficiente de agua', 'Deportistas en climas calurosos', 'media', 1, '2025-09-22 00:04:34'),
+(15, 9, 'advertencia', 'Puede causar retención de agua inicial', 'Deportistas de deportes con categorías de peso', 'baja', 1, '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suplemento_efectos_secundarios`
+--
+
+CREATE TABLE `suplemento_efectos_secundarios` (
+  `id` int(11) NOT NULL,
+  `suplemento_id` int(11) NOT NULL,
+  `efecto_secundario` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `frecuencia` enum('muy_común','común','poco_común','raro','muy_raro') COLLATE utf8mb4_unicode_ci DEFAULT 'poco_común',
+  `descripcion` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `manejo_recomendado` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Efectos adversos documentados';
+
+--
+-- Volcado de datos para la tabla `suplemento_efectos_secundarios`
+--
+
+INSERT INTO `suplemento_efectos_secundarios` (`id`, `suplemento_id`, `efecto_secundario`, `frecuencia`, `descripcion`, `manejo_recomendado`, `activo`, `fecha_creacion`) VALUES
+(1, 3, 'Eructos con sabor a pescado', 'muy_común', 'Sabor desagradable post-ingesta', 'Tomar con comidas, refrigerar el producto, elegir forma entérica', 1, '2025-09-22 00:04:34'),
+(2, 3, 'Náuseas leves', 'común', 'Malestar estomacal especialmente en ayunas', 'Tomar siempre con alimentos', 1, '2025-09-22 00:04:34'),
+(3, 3, 'Diarrea leve', 'común', 'Heces blandas, especialmente con dosis altas', 'Reducir dosis temporalmente, aumentar gradualmente', 1, '2025-09-22 00:04:34'),
+(4, 3, 'Dolor abdominal', 'poco_común', 'Molestias digestivas', 'Tomar con comidas abundantes', 1, '2025-09-22 00:04:34'),
+(5, 3, 'Mal aliento', 'poco_común', 'Halitosis transitoria', 'Mejorar higiene oral, tomar con comidas', 1, '2025-09-22 00:04:34'),
+(6, 3, 'Sangrado prolongado', 'raro', 'Tiempo de coagulación aumentado', 'Suspender y consultar médico inmediatamente', 1, '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suplemento_indicaciones`
+--
+
+CREATE TABLE `suplemento_indicaciones` (
+  `id` int(11) NOT NULL,
+  `suplemento_id` int(11) NOT NULL,
+  `indicacion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `perfil_paciente` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nivel_recomendacion` enum('alta','media','baja') COLLATE utf8mb4_unicode_ci DEFAULT 'media',
+  `notas_adicionales` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Indicaciones terapéuticas específicas de cada suplemento';
+
+--
+-- Volcado de datos para la tabla `suplemento_indicaciones`
+--
+
+INSERT INTO `suplemento_indicaciones` (`id`, `suplemento_id`, `indicacion`, `perfil_paciente`, `nivel_recomendacion`, `notas_adicionales`, `activo`, `fecha_creacion`) VALUES
+(1, 3, 'Hipercolesterolemia', 'Adultos con colesterol LDL >160 mg/dL', 'alta', 'Especialmente efectivo para reducir triglicéridos', 1, '2025-09-22 00:04:34'),
+(2, 3, 'Triglicéridos elevados', 'Pacientes con triglicéridos >200 mg/dL', 'alta', 'Dosis altas (2-4g) pueden ser necesarias', 1, '2025-09-22 00:04:34'),
+(3, 3, 'Prevención cardiovascular primaria', 'Adultos >40 años con factores de riesgo', 'media', 'Combinar con dieta mediterránea', 1, '2025-09-22 00:04:34'),
+(4, 3, 'Artritis reumatoide', 'Pacientes con inflamación crónica articular', 'media', 'Efectos anti-inflamatorios documentados', 1, '2025-09-22 00:04:34'),
+(5, 3, 'Depresión leve-moderada', 'Como terapia complementaria', 'baja', 'Usar junto con tratamiento convencional', 1, '2025-09-22 00:04:34'),
+(6, 3, 'Embarazo y lactancia', 'Mujeres embarazadas y lactantes', 'alta', 'Importante para desarrollo neurológico fetal', 1, '2025-09-22 00:04:34'),
+(7, 2, 'Deficiencia de vitamina D', 'Población general con niveles <20 ng/mL', 'alta', 'Muy común en países con poca exposición solar', 1, '2025-09-22 00:04:34'),
+(8, 2, 'Osteoporosis', 'Mujeres postmenopáusicas y hombres >70 años', 'alta', 'Esencial junto con calcio', 1, '2025-09-22 00:04:34'),
+(9, 2, 'Apoyo inmunológico', 'Personas con infecciones respiratorias frecuentes', 'media', 'Especialmente en otoño/invierno', 1, '2025-09-22 00:04:34'),
+(10, 2, 'Síndrome metabólico', 'Pacientes con diabetes tipo 2 y obesidad', 'media', 'Mejora sensibilidad a insulina', 1, '2025-09-22 00:04:34'),
+(11, 1, 'Dietas restrictivas o desequilibradas', 'Personas con alimentación limitada', 'alta', 'Especialmente útil en dietas veganas o muy restrictivas', 1, '2025-09-22 00:04:34'),
+(12, 1, 'Adultos mayores', 'Personas >65 años con pérdida de apetito', 'alta', 'Absorción reducida con la edad', 1, '2025-09-22 00:04:34'),
+(13, 1, 'Embarazo y lactancia', 'Mujeres gestantes y lactantes', 'media', 'Complementar ácido fólico específico', 1, '2025-09-22 00:04:34'),
+(14, 1, 'Recuperación post-enfermedad', 'Pacientes en convalecencia', 'media', 'Apoyo nutricional temporal', 1, '2025-09-22 00:04:34'),
+(15, 9, 'Entrenamiento de fuerza y potencia', 'Deportistas de disciplinas anaeróbicas', 'alta', 'Uno de los suplementos más estudiados', 1, '2025-09-22 00:04:34'),
+(16, 9, 'Sarcopenia', 'Adultos mayores con pérdida de masa muscular', 'media', 'Combinar con ejercicio de resistencia', 1, '2025-09-22 00:04:34'),
+(17, 9, 'Deportes explosivos', 'Atletas de sprint, levantamiento de pesas', 'alta', 'Máxima efectividad en ejercicios <30 segundos', 1, '2025-09-22 00:04:34'),
+(18, 9, 'Recuperación muscular', 'Deportistas en entrenamientos intensos', 'media', 'Reduce daño muscular y acelera recuperación', 1, '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suplemento_interacciones`
+--
+
+CREATE TABLE `suplemento_interacciones` (
+  `id` int(11) NOT NULL,
+  `suplemento_id` int(11) NOT NULL,
+  `tipo_interaccion` enum('medicamento','suplemento','alimento') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre_interaccion` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion_interaccion` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `severidad` enum('grave','moderada','leve') COLLATE utf8mb4_unicode_ci DEFAULT 'moderada',
+  `recomendacion` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Interacciones con medicamentos, otros suplementos y alimentos';
+
+--
+-- Volcado de datos para la tabla `suplemento_interacciones`
+--
+
+INSERT INTO `suplemento_interacciones` (`id`, `suplemento_id`, `tipo_interaccion`, `nombre_interaccion`, `descripcion_interaccion`, `severidad`, `recomendacion`, `activo`, `fecha_creacion`) VALUES
+(1, 3, 'medicamento', 'Warfarina', 'Puede aumentar el efecto anticoagulante y riesgo de sangrado', 'grave', 'Monitorear INR frecuentemente, ajustar dosis si necesario', 1, '2025-09-22 00:04:34'),
+(2, 3, 'medicamento', 'Aspirina', 'Efecto aditivo antitrombótico, mayor riesgo de sangrado', 'moderada', 'Vigilar signos de sangrado, considerar dosis menores', 1, '2025-09-22 00:04:34'),
+(3, 3, 'medicamento', 'Antihipertensivos', 'Puede potenciar el efecto hipotensor', 'leve', 'Monitorizar presión arterial regularmente', 1, '2025-09-22 00:04:34'),
+(4, 3, 'medicamento', 'Estatinas', 'Efecto sinérgico en reducción de lípidos', 'leve', 'Combinación beneficiosa, monitorear perfil lipídico', 1, '2025-09-22 00:04:34'),
+(5, 3, 'suplemento', 'Vitamina E', 'Efecto antioxidante sinérgico, previene oxidación del omega 3', 'leve', 'Combinación recomendada', 1, '2025-09-22 00:04:34'),
+(6, 3, 'alimento', 'Alcohol (exceso)', 'Puede reducir la absorción y aumentar oxidación', 'leve', 'Moderar consumo de alcohol, separar tomas', 1, '2025-09-22 00:04:34'),
+(7, 9, 'medicamento', 'Diuréticos', 'Puede aumentar riesgo de deshidratación', 'moderada', 'Aumentar ingesta de agua significativamente', 1, '2025-09-22 00:04:34'),
+(8, 9, 'suplemento', 'Cafeína (altas dosis)', 'Puede reducir efectividad de la creatina', 'leve', 'Separar tomas o moderar cafeína', 1, '2025-09-22 00:04:34'),
+(9, 9, 'alimento', 'Carbohidratos simples', 'Mejora la captación muscular de creatina', 'leve', 'Tomar con jugo o dextrosa para mejor absorción', 1, '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `suplemento_referencias`
+--
+
+CREATE TABLE `suplemento_referencias` (
+  `id` int(11) NOT NULL,
+  `suplemento_id` int(11) NOT NULL,
+  `titulo_estudio` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `autores` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `revista_publicacion` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `año_publicacion` year(4) DEFAULT NULL,
+  `tipo_estudio` enum('ensayo_clinico','revision_sistematica','meta_analisis','observacional','caso_control') COLLATE utf8mb4_unicode_ci DEFAULT 'observacional',
+  `url_referencia` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `resumen_hallazgos` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `calidad_evidencia` enum('alta','moderada','baja','muy_baja') COLLATE utf8mb4_unicode_ci DEFAULT 'moderada',
+  `activo` tinyint(4) DEFAULT 1,
+  `fecha_creacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Referencias científicas y evidencia clínica';
+
+--
+-- Volcado de datos para la tabla `suplemento_referencias`
+--
+
+INSERT INTO `suplemento_referencias` (`id`, `suplemento_id`, `titulo_estudio`, `autores`, `revista_publicacion`, `año_publicacion`, `tipo_estudio`, `url_referencia`, `resumen_hallazgos`, `calidad_evidencia`, `activo`, `fecha_creacion`) VALUES
+(1, 3, 'Cardiovascular effects of marine omega-3 fatty acids', 'Mozaffarian D, Wu JH', 'New England Journal of Medicine', 2019, 'revision_sistematica', 'https://www.nejm.org/', 'Reducción significativa de eventos cardiovasculares mayores con EPA/DHA >1g/día', 'alta', 1, '2025-09-22 00:04:34'),
+(2, 3, 'Omega-3 fatty acids for the primary and secondary prevention of cardiovascular disease', 'Abdelhamid AS, et al.', 'Cochrane Database', 2020, 'meta_analisis', 'https://www.cochrane.org/', 'Evidencia moderada de beneficio en prevención secundaria cardiovascular', 'alta', 1, '2025-09-22 00:04:34'),
+(3, 3, 'Marine n-3 polyunsaturated fatty acids and coronary heart disease', 'Harris WS, et al.', 'Atherosclerosis', 2021, 'ensayo_clinico', '', 'EPA de alta dosis reduce eventos cardiovasculares en 25%', 'alta', 1, '2025-09-22 00:04:34'),
+(4, 3, 'Omega-3 supplementation and depression: systematic review', 'Freeman MP, et al.', 'JAMA Psychiatry', 2020, 'revision_sistematica', '', 'Efecto modesto pero significativo en depresión mayor', 'moderada', 1, '2025-09-22 00:04:34');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `usuarios`
 --
 
@@ -462,8 +722,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nombre`, `apellido`, `email`, `password`, `telefono`, `foto_perfil`, `rol_id`, `consultorio_id`, `activo`, `ultimo_acceso`, `configuraciones`, `fecha_creacion`, `fecha_actualizacion`) VALUES
-(1, 'Administrador', 'Sistema', 'sglozua@gmail.com', '$2a$12$Re3dJ1PRX96W1V/iUDH/b.c2QcErL.1Vpj0fo8GZtMoQJ/i9shumO', '(000) 000-0000', NULL, 1, 1, 1, '2025-09-15 13:07:55', NULL, '2025-09-10 12:41:21', '2025-09-15 13:07:55'),
-(4, 'Laura Natalia', 'Jerez', 'natylau08@gmail.com', '$2a$12$iWpm.2PCHdAQRxLuYrgJGesBUIyzirllLTjtYoB6r9Q7D05QfgCVu', '0303456', NULL, 2, 1, 1, NULL, NULL, '2025-09-16 20:32:06', '2025-09-17 17:27:27');
+(1, 'Gus', 'Lozua', 'sglozua@gmail.com', '$2a$12$Re3dJ1PRX96W1V/iUDH/b.c2QcErL.1Vpj0fo8GZtMoQJ/i9shumO', '(000) 000-0000', NULL, 1, 1, 1, '2025-09-21 20:48:24', NULL, '2025-09-10 12:41:21', '2025-09-21 20:48:24'),
+(5, 'Laura Natalia', 'Jerez', 'natylau08@gmail.com', '$2a$12$.STAcFDN32Iu/6IqsFBaYe5KDNyHiC6ENfxWr5fujSJpMnfLEl3N2', '03816787411', NULL, 2, 2, 1, '2025-09-18 13:39:37', NULL, '2025-09-18 11:22:08', '2025-09-21 13:54:28');
 
 -- --------------------------------------------------------
 
@@ -507,15 +767,71 @@ CREATE TABLE `v_pacientes_completo` (
 -- --------------------------------------------------------
 
 --
+-- Estructura Stand-in para la vista `v_suplementos_completo`
+-- (Véase abajo para la vista actual)
+--
+CREATE TABLE `v_suplementos_completo` (
+`id` int(11)
+,`nombre` varchar(100)
+,`nombre_cientifico` varchar(150)
+,`categoria_id` int(11)
+,`descripcion_corta` varchar(255)
+,`descripcion_detallada` text
+,`para_que_sirve` text
+,`beneficios_principales` longtext
+,`dosis_recomendada` varchar(255)
+,`dosis_minima` varchar(100)
+,`dosis_maxima` varchar(100)
+,`forma_presentacion` enum('cápsula','tableta','polvo','líquido','goma','inyectable','tópico')
+,`frecuencia_recomendada` varchar(100)
+,`mejor_momento_toma` varchar(100)
+,`duracion_tratamiento_tipica` varchar(100)
+,`popularidad_uso` int(11)
+,`nivel_evidencia` enum('alta','media','baja','experimental')
+,`precio_referencial` decimal(8,2)
+,`activo` tinyint(4)
+,`destacado` tinyint(4)
+,`fecha_creacion` datetime
+,`fecha_actualizacion` datetime
+,`categoria_nombre` varchar(50)
+,`categoria_color` varchar(7)
+,`categoria_icono` varchar(50)
+,`total_indicaciones` bigint(21)
+,`total_contraindicaciones` bigint(21)
+,`total_interacciones` bigint(21)
+,`total_referencias` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura para la vista `v_pacientes_completo`
 --
 DROP TABLE IF EXISTS `v_pacientes_completo`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_pacientes_completo`  AS SELECT `p`.`id` AS `id`, `p`.`nombre` AS `nombre`, `p`.`apellido` AS `apellido`, `p`.`sexo` AS `sexo`, `p`.`fecha_nacimiento` AS `fecha_nacimiento`, `p`.`telefono` AS `telefono`, `p`.`email` AS `email`, `p`.`direccion` AS `direccion`, `p`.`ocupacion` AS `ocupacion`, `p`.`foto_perfil` AS `foto_perfil`, `p`.`altura_inicial` AS `altura_inicial`, `p`.`peso_inicial` AS `peso_inicial`, `p`.`objetivo` AS `objetivo`, `p`.`observaciones_generales` AS `observaciones_generales`, `p`.`obra_social_id` AS `obra_social_id`, `p`.`numero_afiliado` AS `numero_afiliado`, `p`.`consultorio_id` AS `consultorio_id`, `p`.`usuario_creador_id` AS `usuario_creador_id`, `p`.`activo` AS `activo`, `p`.`fecha_creacion` AS `fecha_creacion`, `p`.`fecha_actualizacion` AS `fecha_actualizacion`, `u`.`nombre` AS `creador_nombre`, `c`.`nombre` AS `consultorio_nombre`, `os`.`nombre` AS `obra_social_nombre`, `os`.`codigo` AS `obra_social_codigo`, `m`.`fecha_medicion` AS `ultima_medicion_fecha`, `m`.`peso` AS `ultimo_peso`, `m`.`imc` AS `ultimo_imc`, `m`.`grasa_corporal` AS `ultima_grasa`, count(`med`.`id`) AS `total_mediciones` FROM (((((`pacientes` `p` left join `usuarios` `u` on(`p`.`usuario_creador_id` = `u`.`id`)) left join `consultorios` `c` on(`p`.`consultorio_id` = `c`.`id`)) left join `obras_sociales` `os` on(`p`.`obra_social_id` = `os`.`id`)) left join `mediciones` `m` on(`p`.`id` = `m`.`paciente_id` and `m`.`fecha_medicion` = (select max(`m2`.`fecha_medicion`) from `mediciones` `m2` where `m2`.`paciente_id` = `p`.`id` and `m2`.`activo` = 1))) left join `mediciones` `med` on(`p`.`id` = `med`.`paciente_id` and `med`.`activo` = 1)) WHERE `p`.`activo` = 1 GROUP BY `p`.`id``id`  ;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura para la vista `v_suplementos_completo`
+--
+DROP TABLE IF EXISTS `v_suplementos_completo`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_suplementos_completo`  AS SELECT `s`.`id` AS `id`, `s`.`nombre` AS `nombre`, `s`.`nombre_cientifico` AS `nombre_cientifico`, `s`.`categoria_id` AS `categoria_id`, `s`.`descripcion_corta` AS `descripcion_corta`, `s`.`descripcion_detallada` AS `descripcion_detallada`, `s`.`para_que_sirve` AS `para_que_sirve`, `s`.`beneficios_principales` AS `beneficios_principales`, `s`.`dosis_recomendada` AS `dosis_recomendada`, `s`.`dosis_minima` AS `dosis_minima`, `s`.`dosis_maxima` AS `dosis_maxima`, `s`.`forma_presentacion` AS `forma_presentacion`, `s`.`frecuencia_recomendada` AS `frecuencia_recomendada`, `s`.`mejor_momento_toma` AS `mejor_momento_toma`, `s`.`duracion_tratamiento_tipica` AS `duracion_tratamiento_tipica`, `s`.`popularidad_uso` AS `popularidad_uso`, `s`.`nivel_evidencia` AS `nivel_evidencia`, `s`.`precio_referencial` AS `precio_referencial`, `s`.`activo` AS `activo`, `s`.`destacado` AS `destacado`, `s`.`fecha_creacion` AS `fecha_creacion`, `s`.`fecha_actualizacion` AS `fecha_actualizacion`, `c`.`nombre` AS `categoria_nombre`, `c`.`color` AS `categoria_color`, `c`.`icono` AS `categoria_icono`, count(distinct `si`.`id`) AS `total_indicaciones`, count(distinct `sc`.`id`) AS `total_contraindicaciones`, count(distinct `sint`.`id`) AS `total_interacciones`, count(distinct `sr`.`id`) AS `total_referencias` FROM (((((`suplementos` `s` left join `categorias_suplementos` `c` on(`s`.`categoria_id` = `c`.`id`)) left join `suplemento_indicaciones` `si` on(`s`.`id` = `si`.`suplemento_id` and `si`.`activo` = 1)) left join `suplemento_contraindicaciones` `sc` on(`s`.`id` = `sc`.`suplemento_id` and `sc`.`activo` = 1)) left join `suplemento_interacciones` `sint` on(`s`.`id` = `sint`.`suplemento_id` and `sint`.`activo` = 1)) left join `suplemento_referencias` `sr` on(`s`.`id` = `sr`.`suplemento_id` and `sr`.`activo` = 1)) WHERE `s`.`activo` = 1 GROUP BY `s`.`id``id`  ;
+
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `categorias_suplementos`
+--
+ALTER TABLE `categorias_suplementos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `nombre` (`nombre`),
+  ADD KEY `idx_categorias_orden` (`orden_visualizacion`,`activo`),
+  ADD KEY `idx_categorias_activo` (`activo`,`orden_visualizacion`);
 
 --
 -- Indices de la tabla `citas`
@@ -627,6 +943,57 @@ ALTER TABLE `roles`
   ADD UNIQUE KEY `nombre` (`nombre`);
 
 --
+-- Indices de la tabla `suplementos`
+--
+ALTER TABLE `suplementos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_categoria` (`categoria_id`),
+  ADD KEY `idx_activo` (`activo`),
+  ADD KEY `idx_destacado` (`destacado`),
+  ADD KEY `idx_suplementos_busqueda` (`nombre`,`activo`),
+  ADD KEY `idx_suplementos_nombre_destacado` (`nombre`,`destacado`,`activo`),
+  ADD KEY `idx_suplementos_popularidad` (`popularidad_uso`,`activo`);
+ALTER TABLE `suplementos` ADD FULLTEXT KEY `nombre` (`nombre`,`descripcion_corta`,`para_que_sirve`);
+
+--
+-- Indices de la tabla `suplemento_contraindicaciones`
+--
+ALTER TABLE `suplemento_contraindicaciones`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_suplemento` (`suplemento_id`),
+  ADD KEY `idx_tipo` (`tipo`);
+
+--
+-- Indices de la tabla `suplemento_efectos_secundarios`
+--
+ALTER TABLE `suplemento_efectos_secundarios`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_suplemento` (`suplemento_id`);
+
+--
+-- Indices de la tabla `suplemento_indicaciones`
+--
+ALTER TABLE `suplemento_indicaciones`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_suplemento` (`suplemento_id`);
+
+--
+-- Indices de la tabla `suplemento_interacciones`
+--
+ALTER TABLE `suplemento_interacciones`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_suplemento` (`suplemento_id`),
+  ADD KEY `idx_severidad` (`severidad`);
+
+--
+-- Indices de la tabla `suplemento_referencias`
+--
+ALTER TABLE `suplemento_referencias`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_suplemento` (`suplemento_id`),
+  ADD KEY `idx_año` (`año_publicacion`);
+
+--
 -- Indices de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
@@ -641,10 +1008,16 @@ ALTER TABLE `usuarios`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `categorias_suplementos`
+--
+ALTER TABLE `categorias_suplementos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT de la tabla `citas`
 --
 ALTER TABLE `citas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT de la tabla `configuraciones`
@@ -662,7 +1035,7 @@ ALTER TABLE `consultorios`
 -- AUTO_INCREMENT de la tabla `fotos_pacientes`
 --
 ALTER TABLE `fotos_pacientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `mediciones`
@@ -707,10 +1080,46 @@ ALTER TABLE `roles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT de la tabla `suplementos`
+--
+ALTER TABLE `suplementos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT de la tabla `suplemento_contraindicaciones`
+--
+ALTER TABLE `suplemento_contraindicaciones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT de la tabla `suplemento_efectos_secundarios`
+--
+ALTER TABLE `suplemento_efectos_secundarios`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `suplemento_indicaciones`
+--
+ALTER TABLE `suplemento_indicaciones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT de la tabla `suplemento_interacciones`
+--
+ALTER TABLE `suplemento_interacciones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `suplemento_referencias`
+--
+ALTER TABLE `suplemento_referencias`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Restricciones para tablas volcadas
@@ -770,6 +1179,42 @@ ALTER TABLE `reportes`
   ADD CONSTRAINT `reportes_ibfk_1` FOREIGN KEY (`paciente_id`) REFERENCES `pacientes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reportes_ibfk_2` FOREIGN KEY (`usuario_generador_id`) REFERENCES `usuarios` (`id`),
   ADD CONSTRAINT `reportes_ibfk_3` FOREIGN KEY (`consultorio_id`) REFERENCES `consultorios` (`id`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `suplementos`
+--
+ALTER TABLE `suplementos`
+  ADD CONSTRAINT `suplementos_ibfk_1` FOREIGN KEY (`categoria_id`) REFERENCES `categorias_suplementos` (`id`);
+
+--
+-- Filtros para la tabla `suplemento_contraindicaciones`
+--
+ALTER TABLE `suplemento_contraindicaciones`
+  ADD CONSTRAINT `suplemento_contraindicaciones_ibfk_1` FOREIGN KEY (`suplemento_id`) REFERENCES `suplementos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `suplemento_efectos_secundarios`
+--
+ALTER TABLE `suplemento_efectos_secundarios`
+  ADD CONSTRAINT `suplemento_efectos_secundarios_ibfk_1` FOREIGN KEY (`suplemento_id`) REFERENCES `suplementos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `suplemento_indicaciones`
+--
+ALTER TABLE `suplemento_indicaciones`
+  ADD CONSTRAINT `suplemento_indicaciones_ibfk_1` FOREIGN KEY (`suplemento_id`) REFERENCES `suplementos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `suplemento_interacciones`
+--
+ALTER TABLE `suplemento_interacciones`
+  ADD CONSTRAINT `suplemento_interacciones_ibfk_1` FOREIGN KEY (`suplemento_id`) REFERENCES `suplementos` (`id`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `suplemento_referencias`
+--
+ALTER TABLE `suplemento_referencias`
+  ADD CONSTRAINT `suplemento_referencias_ibfk_1` FOREIGN KEY (`suplemento_id`) REFERENCES `suplementos` (`id`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `usuarios`

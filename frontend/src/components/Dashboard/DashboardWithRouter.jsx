@@ -44,7 +44,13 @@ import {
   DarkMode,
   Logout,
   Person,
-  AccountCircle
+  AccountCircle,
+  LocalPharmacy as LocalPharmacyIcon,
+  LibraryBooks as ResourcesIcon,
+  MenuBook as RecipeIcon,
+  Calculate as CalculatorIcon,
+  Description as TemplatesIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/ThemeContext';
@@ -59,6 +65,10 @@ import DashboardHome from './DashboardHome';
 import ListaPacientes from '../Pacientes/ListaPacientes';
 import DetallePaciente from '../Pacientes/DetallePaciente';
 import FormularioPaciente from '../Pacientes/FormularioPaciente';
+import SuplementosPage from '../../pages/SuplementosPage';
+import RecetarioPage from '../../pages/RecetarioPage';
+import CalculadorasPage from '../../pages/CalculadorasPage';
+import PlantillasPage from '../../pages/PlantillasPage';
 import NuevaMedicionPage from '../../pages/NuevaMedicionPage';
 import EditarMedicionPage from '../../pages/EditarMedicionPage';
 import VerMedicionPage from '../../pages/VerMedicionPage';
@@ -79,6 +89,7 @@ const Dashboard = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(0);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const [anchorElRecursos, setAnchorElRecursos] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Efecto para la animación aleatoria del icono
@@ -132,12 +143,47 @@ const Dashboard = () => {
       available: isAdmin || isNutricionista
     },
     {
+      title: 'Recursos',
+      icon: <ResourcesIcon sx={{ fontSize: '1.1rem' }} />,
+      path: null, // Es un dropdown, no tiene path directo
+      available: isAdmin || isNutricionista || isSecretario,
+      isDropdown: true
+    },
+    {
       title: 'Administración',
       icon: <SettingsIcon sx={{ fontSize: '1.1rem' }} />,
       path: '/administracion',
       available: isAdmin
     }
   ], [isAdmin, isNutricionista, isSecretario]);
+
+  // Configuración del dropdown de Recursos
+  const recursosMenuItems = [
+    {
+      title: 'Suplementos',
+      icon: <LocalPharmacyIcon sx={{ fontSize: '1rem' }} />,
+      path: '/suplementos',
+      description: 'Base de datos de suplementos nutricionales'
+    },
+    {
+      title: 'Recetario',
+      icon: <RecipeIcon sx={{ fontSize: '1rem' }} />,
+      path: '/recetario',
+      description: 'Colección de recetas saludables'
+    },
+    {
+      title: 'Calculadoras',
+      icon: <CalculatorIcon sx={{ fontSize: '1rem' }} />,
+      path: '/calculadoras',
+      description: 'Herramientas de cálculo nutricional'
+    },
+    {
+      title: 'Plantillas',
+      icon: <TemplatesIcon sx={{ fontSize: '1rem' }} />,
+      path: '/plantillas',
+      description: 'Documentos y protocolos estándar'
+    }
+  ];
 
   // Actualizar tab activo basado en la ruta actual
   useEffect(() => {
@@ -148,11 +194,19 @@ const Dashboard = () => {
     const specialRoutes = ['/notificaciones'];
     const isSpecialRoute = specialRoutes.includes(currentPath) || currentPath.startsWith('/mediciones');
     
+    // Rutas de recursos que deben activar el tab de Recursos
+    const recursosRoutes = ['/suplementos', '/recetario', '/calculadoras', '/plantillas'];
+    const isRecursosRoute = recursosRoutes.some(route => currentPath.startsWith(route));
+    
     if (specialRoutes.includes(currentPath)) {
       setActiveTab(-1); // -1 indica que ningún tab está activo
+    } else if (isRecursosRoute) {
+      // Buscar el índice del tab "Recursos"
+      const recursosTabIndex = availableTabs.findIndex(tab => tab.title === 'Recursos');
+      setActiveTab(recursosTabIndex !== -1 ? recursosTabIndex : -1);
     } else {
       const tabIndex = availableTabs.findIndex(tab => 
-        currentPath === tab.path || currentPath.startsWith(tab.path + '/')
+        tab.path && (currentPath === tab.path || currentPath.startsWith(tab.path + '/'))
       );
       if (tabIndex !== -1) {
         setActiveTab(tabIndex);
@@ -168,8 +222,16 @@ const Dashboard = () => {
     
     const selectedTab = navigationTabs.filter(tab => tab.available)[newValue];
     if (selectedTab) {
-      setActiveTab(newValue);
-      navigate(selectedTab.path);
+      if (selectedTab.isDropdown) {
+        // Si es el tab de Recursos, siempre abrir el menú dropdown
+        // Usamos el elemento del tab directamente para asegurar que el menú se posicione correctamente
+        const tabElement = event.currentTarget || event.target;
+        setAnchorElRecursos(tabElement);
+        // No cambiamos activeTab aquí para evitar conflictos, se mantiene el estado actual
+      } else {
+        setActiveTab(newValue);
+        navigate(selectedTab.path);
+      }
     }
   };
 
@@ -211,6 +273,25 @@ const Dashboard = () => {
     handleCloseUserMenu();
     // Aquí podrías navegar a una página de perfil si existe
     // navigate('/perfil');
+  };
+
+  // Funciones para manejar el menú de Recursos
+  const handleRecursosTabClick = (event) => {
+    // Prevenir el comportamiento por defecto del cambio de tab
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Abrir el dropdown usando el elemento clicado
+    setAnchorElRecursos(event.currentTarget);
+  };
+
+  const handleCloseRecursosMenu = () => {
+    setAnchorElRecursos(null);
+  };
+
+  const handleRecursosMenuClick = (path) => {
+    handleCloseRecursosMenu();
+    navigate(path);
   };
 
   return (
@@ -337,8 +418,10 @@ const Dashboard = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           {tab.icon}
                           {tab.title}
+                          {tab.isDropdown && <ExpandMoreIcon sx={{ fontSize: '1rem' }} />}
                         </Box>
                       }
+                      onClick={tab.isDropdown ? handleRecursosTabClick : undefined}
                     />
                   ))}
                 </Tabs>
@@ -513,6 +596,63 @@ const Dashboard = () => {
                     <ListItemText primary="Cerrar Sesión" />
                   </MenuItem>
                 </Menu>
+                
+                {/* Menu de Recursos */}
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="recursos-menu"
+                  anchorEl={anchorElRecursos}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                  }}
+                  open={Boolean(anchorElRecursos)}
+                  onClose={handleCloseRecursosMenu}
+                  PaperProps={{
+                    sx: {
+                      bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                      border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb',
+                      boxShadow: darkMode 
+                        ? '0 10px 25px rgba(0, 0, 0, 0.4)' 
+                        : '0 10px 25px rgba(0, 0, 0, 0.1)',
+                      borderRadius: 2,
+                      minWidth: 280
+                    }
+                  }}
+                >
+                  {recursosMenuItems.map((item, index) => (
+                    <MenuItem 
+                      key={index}
+                      onClick={() => handleRecursosMenuClick(item.path)}
+                      sx={{
+                        color: darkMode ? '#ffffff' : '#1a1a1a',
+                        py: 2,
+                        '&:hover': {
+                          bgcolor: darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(243, 244, 246, 0.5)'
+                        }
+                      }}
+                    >
+                      <ListItemIcon>
+                        {React.cloneElement(item.icon, { 
+                          sx: { color: darkMode ? '#ffffff' : '#1a1a1a' } 
+                        })}
+                      </ListItemIcon>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.description}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Menu>
               </Box>
             </Toolbar>
           </Container>
@@ -542,6 +682,14 @@ const Dashboard = () => {
               <Route path="/pacientes/nuevo" element={<FormularioPaciente />} />
               <Route path="/pacientes/editar/:id" element={<FormularioPaciente />} />
               <Route path="/pacientes/:id" element={<DetallePaciente />} />
+              
+              {/* Rutas de suplementos */}
+              <Route path="/suplementos" element={<SuplementosPage />} />
+              
+              {/* Rutas de recursos */}
+              <Route path="/recetario" element={<RecetarioPage />} />
+              <Route path="/calculadoras" element={<CalculadorasPage />} />
+              <Route path="/plantillas" element={<PlantillasPage />} />
               
               {/* Rutas de mediciones */}
               <Route path="/mediciones" element={<MedicionesHomePage />} />

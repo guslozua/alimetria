@@ -1,0 +1,13 @@
+Análisis del problema del "0":
+
+1. HTML problemático: <div class="MuiCard-root">0<button class="MuiIconButton-root"...
+2. El "0" aparece inmediatamente después del Card
+3. Solo aparece en suplementos NO destacados
+4. El suplemento Calcio tiene popularidad_uso: 58, no 0
+
+CONCLUSIÓN: Debe haber una expresión como:
+- {destacado} (renderiza 0 cuando destacado = false/0)
+- {algún_campo_undefined} && algo
+- Una expresión mal formada
+
+SOLUCIÓN: Buscar en TarjetaSuplemento.jsx líneas que puedan renderizar 0 directamente.

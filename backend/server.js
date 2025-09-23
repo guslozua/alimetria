@@ -93,6 +93,7 @@ app.use('/api/pacientes', require('./routes/pacientes'));
 app.use('/api/mediciones', require('./routes/mediciones'));
 app.use('/api/obras-sociales', require('./routes/obrasSociales'));
 app.use('/api/reportes', require('./routes/reportes'));
+app.use('/api/suplementos', require('./routes/suplementos')); // 💊 Nueva ruta de suplementos
 app.use('/api/test-pdf', require('./routes/test-pdf')); // Rutas de test para PDFs
 app.use('/api/citas', require('./routes/citas'));
 app.use('/api/citas-test', require('./routes/citas-test')); // Rutas de prueba para citas

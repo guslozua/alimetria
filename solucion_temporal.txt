@@ -1,0 +1,18 @@
+// Archivo temporal para encontrar la línea problemática
+// Revisando el código línea por línea en la zona de la vista Grid
+
+// La estructura debe ser así (sin el 0 problemático):
+<Card onClick={handleCardClick}>
+  {destacado && (
+    <Box>ESTRELLA</Box>
+  )}
+  <IconButton>FAVORITOS</IconButton>
+  <CardContent>...</CardContent>
+</Card>
+
+// SI hay algo como esto, ES EL PROBLEMA:
+// {destacado}  <- Esto renderiza 0 cuando destacado = false
+// {suplemento.destacado}  <- Esto también
+// {precio_referencial || 0}  <- Si es null, renderiza 0
+
+// SOLUCIÓN: Eliminar cualquier expresión que pueda renderizar 0 directamente
