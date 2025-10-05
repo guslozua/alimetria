@@ -33,8 +33,8 @@ class PacienteController {
       };
 
       // Si no es administrador, filtrar por consultorio
-      if (req.user.rol !== 'administrador' && req.user.consultoirioId) {
-        filters.consultorio_id = req.user.consultoirioId;
+      if (req.user.rol !== 'administrador' && req.user.consultorioId) {
+        filters.consultorio_id = req.user.consultorioId;
       }
 
       const pacientes = await Paciente.findAll(filters);
@@ -86,7 +86,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para ver este paciente'
@@ -146,11 +146,11 @@ class PacienteController {
       }
 
       // Asignar usuario creador y consultorio
-      pacienteData.usuario_creador_id = req.user.userId;
+      pacienteData.usuario_creador_id = req.user.id;
       
       // Si no es admin y no especifica consultorio, usar el del usuario
       if (req.user.rol !== 'administrador' && !pacienteData.consultorio_id) {
-        pacienteData.consultorio_id = req.user.consultoirioId;
+        pacienteData.consultorio_id = req.user.consultorioId;
       }
 
       const nuevoPaciente = await Paciente.create(pacienteData);
@@ -197,7 +197,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para modificar este paciente'
@@ -248,7 +248,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para eliminar este paciente'
@@ -288,7 +288,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para ver las mediciones de este paciente'
@@ -327,7 +327,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para ver las estadísticas de este paciente'
@@ -367,7 +367,7 @@ class PacienteController {
 
       // Verificar permisos de consultorio si no es admin
       if (req.user.rol !== 'administrador' && 
-          paciente.consultorio_id !== req.user.consultoirioId) {
+          paciente.consultorio_id !== req.user.consultorioId) {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para ver las fotos de este paciente'
@@ -409,8 +409,8 @@ class PacienteController {
       };
 
       // Si no es administrador, filtrar por consultorio
-      if (req.user.rol !== 'administrador' && req.user.consultoirioId) {
-        filters.consultorio_id = req.user.consultoirioId;
+      if (req.user.rol !== 'administrador' && req.user.consultorioId) {
+        filters.consultorio_id = req.user.consultorioId;
       }
 
       const pacientes = await Paciente.findAll(filters);

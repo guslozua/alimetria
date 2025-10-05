@@ -51,6 +51,7 @@ import {
   MenuBook as RecipeIcon,
   Calculate as CalculatorIcon,
   Description as TemplatesIcon,
+  ImageSearch as InfographicsIcon,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
@@ -67,6 +68,8 @@ import ListaPacientes from '../Pacientes/ListaPacientes';
 import DetallePaciente from '../Pacientes/DetallePaciente';
 import FormularioPaciente from '../Pacientes/FormularioPaciente';
 import SuplementosPage from '../../pages/SuplementosPage';
+import { InfografiasGaleria } from '../Infografias';
+import InfografiasAdmin from '../Infografias/Admin/InfografiasAdmin';
 import RecetarioPage from '../../pages/RecetarioPage';
 import CalculadorasPage from '../../pages/CalculadorasPage';
 import PlantillasPage from '../../pages/PlantillasPage';
@@ -167,6 +170,19 @@ const Dashboard = () => {
       description: 'Base de datos de suplementos nutricionales'
     },
     {
+      title: 'Infografías',
+      icon: <InfographicsIcon sx={{ fontSize: '1rem' }} />,
+      path: '/infografias',
+      description: 'Biblioteca de recursos educativos'
+    },
+    // Solo admin y nutricionistas ven el panel de administración de infografías
+    ...((isAdmin() || isNutricionista()) ? [{
+      title: 'Admin Infografías',
+      icon: <SettingsIcon sx={{ fontSize: '1rem' }} />,
+      path: '/infografias/admin',
+      description: 'Administrar infografías educativas'
+    }] : []),
+    {
       title: 'Recetario',
       icon: <RecipeIcon sx={{ fontSize: '1rem' }} />,
       path: '/recetario',
@@ -196,7 +212,7 @@ const Dashboard = () => {
     const isSpecialRoute = specialRoutes.includes(currentPath) || currentPath.startsWith('/mediciones');
     
     // Rutas de recursos que deben activar el tab de Recursos
-    const recursosRoutes = ['/suplementos', '/recetario', '/calculadoras', '/plantillas'];
+    const recursosRoutes = ['/suplementos', '/infografias', '/recetario', '/calculadoras', '/plantillas'];
     const isRecursosRoute = recursosRoutes.some(route => currentPath.startsWith(route));
     
     if (specialRoutes.includes(currentPath)) {
@@ -719,6 +735,10 @@ const Dashboard = () => {
               
               {/* Rutas de suplementos */}
               <Route path="/suplementos" element={<SuplementosPage />} />
+              
+              {/* Rutas de infografías */}
+              <Route path="/infografias" element={<InfografiasGaleria />} />
+              <Route path="/infografias/admin" element={<InfografiasAdmin />} />
               
               {/* Rutas de recursos */}
               <Route path="/recetario" element={<RecetarioPage />} />

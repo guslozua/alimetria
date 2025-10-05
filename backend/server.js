@@ -89,14 +89,78 @@ try {
 } catch (error) {
   console.error('❌ Error cargando rutas de auth:', error.message);
 }
-app.use('/api/pacientes', require('./routes/pacientes'));
-app.use('/api/mediciones', require('./routes/mediciones'));
-app.use('/api/obras-sociales', require('./routes/obrasSociales'));
-app.use('/api/reportes', require('./routes/reportes'));
-app.use('/api/suplementos', require('./routes/suplementos')); // 💊 Nueva ruta de suplementos
-app.use('/api/test-pdf', require('./routes/test-pdf')); // Rutas de test para PDFs
-app.use('/api/citas', require('./routes/citas'));
-app.use('/api/citas-test', require('./routes/citas-test')); // Rutas de prueba para citas
+
+console.log('Cargando rutas de pacientes...');
+try {
+  app.use('/api/pacientes', require('./routes/pacientes'));
+  console.log('✓ Rutas de pacientes cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de pacientes:', error.message);
+}
+
+console.log('Cargando rutas de mediciones...');
+try {
+  app.use('/api/mediciones', require('./routes/mediciones'));
+  console.log('✓ Rutas de mediciones cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de mediciones:', error.message);
+}
+
+console.log('Cargando rutas de obras sociales...');
+try {
+  app.use('/api/obras-sociales', require('./routes/obrasSociales'));
+  console.log('✓ Rutas de obras sociales cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de obras sociales:', error.message);
+}
+
+console.log('Cargando rutas de reportes...');
+try {
+  app.use('/api/reportes', require('./routes/reportes'));
+  console.log('✓ Rutas de reportes cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de reportes:', error.message);
+}
+
+console.log('Cargando rutas de suplementos...');
+try {
+  app.use('/api/suplementos', require('./routes/suplementos')); // 💊 Nueva ruta de suplementos
+  console.log('✓ Rutas de suplementos cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de suplementos:', error.message);
+}
+
+console.log('Cargando rutas de infografías...');
+try {
+  app.use('/api', require('./routes/infografias.routes')); // 📊 Rutas de infografías
+  console.log('✓ Rutas de infografías cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de infografías:', error.message);
+}
+
+console.log('Cargando rutas de test-pdf...');
+try {
+  app.use('/api/test-pdf', require('./routes/test-pdf')); // Rutas de test para PDFs
+  console.log('✓ Rutas de test-pdf cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de test-pdf:', error.message);
+}
+
+console.log('Cargando rutas de citas...');
+try {
+  app.use('/api/citas', require('./routes/citas'));
+  console.log('✓ Rutas de citas cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de citas:', error.message);
+}
+
+console.log('Cargando rutas de citas-test...');
+try {
+  app.use('/api/citas-test', require('./routes/citas-test')); // Rutas de prueba para citas
+  console.log('✓ Rutas de citas-test cargadas correctamente');
+} catch (error) {
+  console.error('❌ Error cargando rutas de citas-test:', error.message);
+}
 app.use('/api/notificaciones', require('./routes/notificaciones'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 // Rutas de administración

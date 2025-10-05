@@ -173,8 +173,53 @@ const verificarAccesoPaciente = (req, res, next) => {
 // Función auxiliar para validar permisos
 const validarPermisos = verificarPermisos;
 
+/**
+ * Middleware para verificar roles específicos (más simple para uso directo)
+ */
+const verificarRoles = (rolesPermitidos) => {
+  return (req, res, next) => {
+    try {
+      const { user } = req;
+      
+      if (!user) {
+        return res.status(401).json({ 
+          mensaje: 'Token de autenticación requerido' 
+        });
+      }
+
+      const rolUsuario = user.rol || user.rol_nombre;
+      
+      // Los administradores tienen acceso a todo
+      if (rolUsuario === 'administrador') {
+        return next();
+      }
+
+      // Verificar si el rol del usuario está en los roles permitidos
+      if (!rolesPermitidos.includes(rolUsuario)) {
+        return res.status(403).json({ 
+          mensaje: 'No tiene permisos suficientes para realizar esta acción',
+          rolesPermitidos,
+          rolUsuario
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Error en verificación de roles:', error);
+      res.status(500).json({ 
+        mensaje: 'Error interno del servidor' 
+      });
+    }
+  };
+};
+
+// Alias para compatibilidad (para casos donde se espera verificar roles)
+const permisosMiddleware = verificarRoles;
+
 module.exports = {
   verificarPermisos,
+  verificarRoles,
+  permisosMiddleware,  // Alias para compatibilidad
   validarPermisos,  // Alias por compatibilidad
   requireAdmin,
   verificarAccesoReportes,

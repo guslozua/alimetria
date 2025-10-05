@@ -1,71 +1,100 @@
 import axios from 'axios';
 
-// Configuración base de Axios
+// Configuración de la URL base de la API
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+// Extraer la URL del servidor sin /api para archivos estáticos
+export const getServerBaseUrl = () => {
+  return API_URL.replace('/api', '');
+};
+
+// Configurar axios
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
-  timeout: 10000,
+  baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
-// Interceptor para agregar token JWT automáticamente
+// Interceptor para agregar el token a todas las peticiones
 api.interceptors.request.use(
   (config) => {
-    console.log('🔍 API Request:', config.method.toUpperCase(), config.url, config.baseURL + config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Log detallado de cada petición
+    console.log('🔍 API Request:', config.method.toUpperCase(), config.url, config.baseURL + config.url);
+    
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    console.error('❌ Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Interceptor para manejar respuestas y errores
+// Interceptor para manejar respuestas
 api.interceptors.response.use(
   (response) => {
     console.log('✓ API Response:', response.status, response.config.url);
     console.log('🔍 Response details:', {
-      responseType: response.config.responseType,
+      responseType: response.headers['content-type'],
       hasData: !!response.data,
       dataType: typeof response.data,
-      dataContent: response.config.responseType !== 'blob' ? response.data : '[BLOB]'
+      dataContent: response.data
     });
     
-    // Para respuestas blob (PDFs), devolver el objeto response completo
-    if (response.config.responseType === 'blob') {
-      console.log('🔍 Blob response detected, returning full response object');
-      return response;
+    // Si la respuesta es JSON y tiene la estructura {success, data}
+    if (response.data && typeof response.data === 'object') {
+      console.log('🔍 JSON response detected, returning response.data:', response.data);
+      return response.data;
     }
     
-    // Para otras respuestas, devolver solo los datos
-    console.log('🔍 JSON response detected, returning response.data:', response.data);
-    return response.data;
+    return response;
   },
   (error) => {
-    console.error('❌ API Error:', error.message, error.response?.status, error.response?.data);
+    console.error('❌ Response error:', error);
     
-    // Si el token ha expirado o es inválido, redirigir al login
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    if (error.response) {
+      // El servidor respondió con un código de error
+      const status = error.response.status;
+      const message = error.response.data?.message || error.message;
+      
+      console.error(`HTTP ${status}:`, message);
+      
+      // Manejar errores específicos
+      if (status === 401) {
+        // Token inválido o expirado
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      
+      return Promise.reject({
+        status,
+        message,
+        data: error.response.data
+      });
+    } else if (error.request) {
+      // La petición se hizo pero no hubo respuesta
+      console.error('No response from server:', error.request);
+      return Promise.reject({
+        status: 0,
+        message: 'No se pudo conectar con el servidor',
+        data: null
+      });
+    } else {
+      // Error al configurar la petición
+      console.error('Request setup error:', error.message);
+      return Promise.reject({
+        status: -1,
+        message: error.message,
+        data: null
+      });
     }
-    
-    // Para otros errores, propagar el error con información útil
-    const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
-    const errorData = {
-      message: errorMessage,
-      status: error.response?.status,
-      data: error.response?.data
-    };
-    
-    return Promise.reject(errorData);
   }
 );
 
 export default api;
+export { API_URL };
