@@ -175,13 +175,6 @@ const Dashboard = () => {
       path: '/infografias',
       description: 'Biblioteca de recursos educativos'
     },
-    // Solo admin y nutricionistas ven el panel de administración de infografías
-    ...((isAdmin() || isNutricionista()) ? [{
-      title: 'Admin Infografías',
-      icon: <SettingsIcon sx={{ fontSize: '1rem' }} />,
-      path: '/infografias/admin',
-      description: 'Administrar infografías educativas'
-    }] : []),
     {
       title: 'Recetario',
       icon: <RecipeIcon sx={{ fontSize: '1rem' }} />,

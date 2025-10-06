@@ -26,6 +26,7 @@ import {
   TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 import { useThemeMode } from '../context/ThemeContext';
+import { IMCScale, ICCScale } from '../components/Calculadoras';
 
 const CalculadorasPage = () => {
   const { darkMode } = useThemeMode();
@@ -46,6 +47,22 @@ const CalculadorasPage = () => {
   const [pesoAgua, setPesoAgua] = useState('');
   const [nivelActividad, setNivelActividad] = useState('');
   const [resultadoAgua, setResultadoAgua] = useState(null);
+  
+  // Estados para ICC (Índice Cintura/Cadera)
+  const [cintura, setCintura] = useState('');
+  const [cadera, setCadera] = useState('');
+  const [sexoICC, setSexoICC] = useState('');
+  const [resultadoICC, setResultadoICC] = useState(null);
+  
+  // Estados para Calculadora de Macros
+  const [pesoMacros, setPesoMacros] = useState('');
+  const [objetivo, setObjetivo] = useState('');
+  const [resultadoMacros, setResultadoMacros] = useState(null);
+  
+  // Estados para Peso Ideal
+  const [alturaPesoIdeal, setAlturaPesoIdeal] = useState('');
+  const [sexoPesoIdeal, setSexoPesoIdeal] = useState('');
+  const [resultadoPesoIdeal, setResultadoPesoIdeal] = useState(null);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -127,12 +144,162 @@ const CalculadorasPage = () => {
       });
     }
   };
+  
+  // Calculadora ICC (Índice Cintura/Cadera)
+  const calcularICC = () => {
+    if (cintura && cadera && sexoICC) {
+      const icc = (cintura / cadera).toFixed(2);
+      
+      let categoria = '';
+      let riesgo = '';
+      let color = '';
+      
+      if (sexoICC === 'M') {
+        if (icc < 0.95) {
+          categoria = 'Bajo';
+          riesgo = 'Riesgo bajo';
+          color = '#10b981';
+        } else if (icc < 1.0) {
+          categoria = 'Moderado';
+          riesgo = 'Riesgo moderado';
+          color = '#f59e0b';
+        } else {
+          categoria = 'Alto';
+          riesgo = 'Riesgo alto';
+          color = '#ef4444';
+        }
+      } else {
+        if (icc < 0.80) {
+          categoria = 'Bajo';
+          riesgo = 'Riesgo bajo';
+          color = '#10b981';
+        } else if (icc < 0.85) {
+          categoria = 'Moderado';
+          riesgo = 'Riesgo moderado';
+          color = '#f59e0b';
+        } else {
+          categoria = 'Alto';
+          riesgo = 'Riesgo alto';
+          color = '#ef4444';
+        }
+      }
+      
+      setResultadoICC({
+        valor: icc,
+        categoria,
+        riesgo,
+        color
+      });
+    }
+  };
+  
+  // Calculadora de Macros
+  const calcularMacros = () => {
+    if (pesoMacros && altura && edad && sexo && objetivo) {
+      // Calcular TMB primero
+      let tmb;
+      if (sexo === 'M') {
+        tmb = 88.362 + (13.397 * pesoMacros) + (4.799 * altura) - (5.677 * edad);
+      } else {
+        tmb = 447.593 + (9.247 * pesoMacros) + (3.098 * altura) - (4.330 * edad);
+      }
+      
+      // Ajustar calorías según objetivo
+      let calorias;
+      let proteinasGrKg, grasasPorc, carbsPorc;
+      
+      switch(objetivo) {
+        case 'perder':
+          calorias = tmb * 1.2 * 0.8; // Déficit 20%
+          proteinasGrKg = 2.0;
+          grasasPorc = 25;
+          carbsPorc = 45;
+          break;
+        case 'mantener':
+          calorias = tmb * 1.375;
+          proteinasGrKg = 1.6;
+          grasasPorc = 25;
+          carbsPorc = 50;
+          break;
+        case 'ganar':
+          calorias = tmb * 1.55 * 1.1; // Superávit 10%
+          proteinasGrKg = 2.2;
+          grasasPorc = 25;
+          carbsPorc = 50;
+          break;
+        default:
+          calorias = tmb * 1.375;
+          proteinasGrKg = 1.6;
+          grasasPorc = 25;
+          carbsPorc = 50;
+      }
+      
+      const proteinas = Math.round(pesoMacros * proteinasGrKg);
+      const grasas = Math.round((calorias * (grasasPorc / 100)) / 9);
+      const carbohidratos = Math.round((calorias - (proteinas * 4) - (grasas * 9)) / 4);
+      
+      setResultadoMacros({
+        calorias: Math.round(calorias),
+        proteinas,
+        carbohidratos,
+        grasas,
+        proteinasPorc: Math.round((proteinas * 4 / calorias) * 100),
+        carbsPorc: Math.round((carbohidratos * 4 / calorias) * 100),
+        grasasPorc: Math.round((grasas * 9 / calorias) * 100)
+      });
+    }
+  };
+  
+  // Calculadora de Peso Ideal
+  const calcularPesoIdeal = () => {
+    if (alturaPesoIdeal && sexoPesoIdeal) {
+      const alturaCm = parseFloat(alturaPesoIdeal);
+      const alturaM = alturaCm / 100;
+      const alturaPulgadas = alturaCm / 2.54;
+      
+      let devine, robinson, miller, hamwi;
+      
+      if (sexoPesoIdeal === 'M') {
+        // Fórmulas para hombres
+        devine = 50 + 2.3 * ((alturaPulgadas - 60));
+        robinson = 52 + 1.9 * ((alturaPulgadas - 60));
+        miller = 56.2 + 1.41 * ((alturaPulgadas - 60));
+        hamwi = 48 + 2.7 * ((alturaPulgadas - 60));
+      } else {
+        // Fórmulas para mujeres
+        devine = 45.5 + 2.3 * ((alturaPulgadas - 60));
+        robinson = 49 + 1.7 * ((alturaPulgadas - 60));
+        miller = 53.1 + 1.36 * ((alturaPulgadas - 60));
+        hamwi = 45.5 + 2.2 * ((alturaPulgadas - 60));
+      }
+      
+      // IMC rango saludable (18.5-24.9)
+      const pesoMinSaludable = 18.5 * alturaM * alturaM;
+      const pesoMaxSaludable = 24.9 * alturaM * alturaM;
+      
+      const promedio = (devine + robinson + miller + hamwi) / 4;
+      
+      setResultadoPesoIdeal({
+        devine: Math.round(devine * 10) / 10,
+        robinson: Math.round(robinson * 10) / 10,
+        miller: Math.round(miller * 10) / 10,
+        hamwi: Math.round(hamwi * 10) / 10,
+        promedio: Math.round(promedio * 10) / 10,
+        rangoSaludable: {
+          min: Math.round(pesoMinSaludable * 10) / 10,
+          max: Math.round(pesoMaxSaludable * 10) / 10
+        }
+      });
+    }
+  };
 
   const tabs = [
     { label: 'IMC', icon: <FitnessCenterIcon /> },
     { label: 'TMB/GET', icon: <SpeedIcon /> },
     { label: 'Agua Diaria', icon: <RestaurantIcon /> },
-    { label: 'Más Herramientas', icon: <TrendingUpIcon /> }
+    { label: 'ICC', icon: <CalculateIcon /> },
+    { label: 'Macros', icon: <RestaurantIcon /> },
+    { label: 'Peso Ideal', icon: <TrendingUpIcon /> }
   ];
 
   return (
@@ -271,7 +438,7 @@ const CalculadorasPage = () => {
                       Resultado IMC
                     </Typography>
                     
-                    <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Box sx={{ textAlign: 'center', mb: 2 }}>
                       <Typography 
                         variant="h2" 
                         sx={{ 
@@ -287,10 +454,16 @@ const CalculadorasPage = () => {
                         sx={{ 
                           bgcolor: resultadoIMC.color,
                           color: 'white',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          px: 2,
+                          py: 0.5
                         }}
                       />
                     </Box>
+
+                    {/* Escala visual del IMC */}
+                    <IMCScale imc={parseFloat(resultadoIMC.valor)} />
 
                     <Divider sx={{ my: 3 }} />
                     
@@ -535,53 +708,447 @@ const CalculadorasPage = () => {
           </>
         )}
 
-        {/* Más Herramientas */}
+        {/* Calculadora ICC */}
         {activeTab === 3 && (
-          <Grid item xs={12}>
-            <Card sx={{ 
-              bgcolor: darkMode ? '#1f2937' : '#ffffff',
-              border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
-            }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                  Próximamente
-                </Typography>
-                
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Box sx={{ p: 3, border: '2px dashed #e5e7eb', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                        Calculadora de Macros
+          <>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ 
+                bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+              }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                    Índice Cintura/Cadera (ICC)
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Cintura (cm)"
+                        type="number"
+                        value={cintura}
+                        onChange={(e) => setCintura(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 0.1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Cadera (cm)"
+                        type="number"
+                        value={cadera}
+                        onChange={(e) => setCadera(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 0.1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth>
+                        <InputLabel>Sexo</InputLabel>
+                        <Select
+                          value={sexoICC}
+                          label="Sexo"
+                          onChange={(e) => setSexoICC(e.target.value)}
+                        >
+                          <MenuItem value="M">Masculino</MenuItem>
+                          <MenuItem value="F">Femenino</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={calcularICC}
+                        sx={{
+                          bgcolor: '#667eea',
+                          '&:hover': { bgcolor: '#5a67d8' }
+                        }}
+                      >
+                        Calcular ICC
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  
+                  <Alert severity="info" sx={{ mt: 3 }}>
+                    <Typography variant="body2">
+                      <strong>Cómo medir:</strong><br />
+                      • <strong>Cintura:</strong> En el punto más estrecho del abdomen<br />
+                      • <strong>Cadera:</strong> En la parte más ancha de las caderas
+                    </Typography>
+                  </Alert>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              {resultadoICC && (
+                <Card sx={{ 
+                  bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                  border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+                }}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                      Resultado ICC
+                    </Typography>
+                    
+                    <Box sx={{ textAlign: 'center', mb: 2 }}>
+                      <Typography 
+                        variant="h2" 
+                        sx={{ 
+                          fontWeight: 700, 
+                          color: resultadoICC.color,
+                          mb: 1 
+                        }}
+                      >
+                        {resultadoICC.valor}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Distribución de macronutrientes
+                      <Chip 
+                        label={resultadoICC.riesgo}
+                        sx={{ 
+                          bgcolor: resultadoICC.color,
+                          color: 'white',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          px: 2,
+                          py: 0.5
+                        }}
+                      />
+                    </Box>
+
+                    {/* Escala visual del ICC */}
+                    <ICCScale icc={resultadoICC.valor} sexo={sexoICC} />
+                  </CardContent>
+                </Card>
+              )}
+            </Grid>
+          </>
+        )}
+
+        {/* Calculadora de Macros */}
+        {activeTab === 4 && (
+          <>
+            <Grid item xs={12}>
+              <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+                Calculadora de Macronutrientes
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Card sx={{ 
+                bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+              }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                    Datos para Macros
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Peso (kg)"
+                        type="number"
+                        value={pesoMacros}
+                        onChange={(e) => setPesoMacros(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 0.1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Altura (cm)"
+                        type="number"
+                        value={altura}
+                        onChange={(e) => setAltura(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 0.1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Edad (años)"
+                        type="number"
+                        value={edad}
+                        onChange={(e) => setEdad(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Sexo</InputLabel>
+                        <Select
+                          value={sexo}
+                          label="Sexo"
+                          onChange={(e) => setSexo(e.target.value)}
+                        >
+                          <MenuItem value="M">Masculino</MenuItem>
+                          <MenuItem value="F">Femenino</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth>
+                        <InputLabel>Objetivo</InputLabel>
+                        <Select
+                          value={objetivo}
+                          label="Objetivo"
+                          onChange={(e) => setObjetivo(e.target.value)}
+                        >
+                          <MenuItem value="perder">Perder peso (déficit calórico)</MenuItem>
+                          <MenuItem value="mantener">Mantener peso</MenuItem>
+                          <MenuItem value="ganar">Ganar masa muscular (superávit)</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={calcularMacros}
+                        sx={{
+                          bgcolor: '#667eea',
+                          '&:hover': { bgcolor: '#5a67d8' }
+                        }}
+                      >
+                        Calcular Macros
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              {resultadoMacros && (
+                <Card sx={{ 
+                  bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                  border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+                }}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                      Distribución de Macros
+                    </Typography>
+                    
+                    {/* Calorías Totales */}
+                    <Box sx={{ textAlign: 'center', mb: 3, p: 3, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Calorías Diarias Recomendadas
+                      </Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#667eea' }}>
+                        {resultadoMacros.calorias} kcal
                       </Typography>
                     </Box>
+
+                    {/* Macronutrientes */}
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Box sx={{ p: 2, bgcolor: '#dbeafe', borderRadius: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Proteínas
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 700, color: '#3b82f6' }}>
+                            {resultadoMacros.proteinas}g ({resultadoMacros.proteinasPorc}%)
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Box sx={{ p: 2, bgcolor: '#fef3c7', borderRadius: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Carbohidratos
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 700, color: '#f59e0b' }}>
+                            {resultadoMacros.carbohidratos}g ({resultadoMacros.carbsPorc}%)
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Box sx={{ p: 2, bgcolor: '#fee2e2', borderRadius: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Grasas
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 700, color: '#ef4444' }}>
+                            {resultadoMacros.grasas}g ({resultadoMacros.grasasPorc}%)
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+
+                    <Alert severity="info" sx={{ mt: 3 }}>
+                      Ajusta las porciones de tus comidas para alcanzar estos valores diarios.
+                    </Alert>
+                  </CardContent>
+                </Card>
+              )}
+            </Grid>
+
+          </>
+        )}
+
+        {/* Calculadora de Peso Ideal */}
+        {activeTab === 5 && (
+          <>
+            <Grid item xs={12}>
+              <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+                Calculadora de Peso Ideal
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Card sx={{ 
+                bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+              }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                    Datos para Peso Ideal
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Altura (cm)"
+                        type="number"
+                        value={alturaPesoIdeal}
+                        onChange={(e) => setAlturaPesoIdeal(e.target.value)}
+                        InputProps={{
+                          inputProps: { min: 0, step: 0.1 }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControl fullWidth>
+                        <InputLabel>Sexo</InputLabel>
+                        <Select
+                          value={sexoPesoIdeal}
+                          label="Sexo"
+                          onChange={(e) => setSexoPesoIdeal(e.target.value)}
+                        >
+                          <MenuItem value="M">Masculino</MenuItem>
+                          <MenuItem value="F">Femenino</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={calcularPesoIdeal}
+                        sx={{
+                          bgcolor: '#667eea',
+                          '&:hover': { bgcolor: '#5a67d8' }
+                        }}
+                      >
+                        Calcular Peso Ideal
+                      </Button>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Box sx={{ p: 3, border: '2px dashed #e5e7eb', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                        Índice Cintura/Cadera
+                  
+                  <Alert severity="info" sx={{ mt: 3 }}>
+                    <Typography variant="body2">
+                      <strong>Nota:</strong> El peso ideal es una referencia. 
+                      Cada persona tiene una composición corporal única.
+                    </Typography>
+                  </Alert>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              {resultadoPesoIdeal && (
+                <Card sx={{ 
+                  bgcolor: darkMode ? '#1f2937' : '#ffffff',
+                  border: darkMode ? '1px solid #374151' : '1px solid #e5e7eb'
+                }}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                      Resultados - Peso Ideal
+                    </Typography>
+                    
+                    {/* Promedio destacado */}
+                    <Box sx={{ textAlign: 'center', mb: 3, p: 3, bgcolor: '#f0fdf4', borderRadius: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Peso Ideal Promedio
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Evaluación de riesgo cardiovascular
+                      <Typography variant="h3" sx={{ fontWeight: 700, color: '#10b981' }}>
+                        {resultadoPesoIdeal.promedio} kg
                       </Typography>
                     </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Box sx={{ p: 3, border: '2px dashed #e5e7eb', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                        Peso Ideal
+
+                    {/* Rango saludable según IMC */}
+                    <Box sx={{ mb: 3, p: 2, bgcolor: '#dbeafe', borderRadius: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Rango Saludable (IMC 18.5-24.9)
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Múltiples fórmulas de referencia
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: '#3b82f6' }}>
+                        {resultadoPesoIdeal.rangoSaludable.min} - {resultadoPesoIdeal.rangoSaludable.max} kg
                       </Typography>
                     </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+
+                    {/* Fórmulas individuales */}
+                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                      Según diferentes fórmulas:
+                    </Typography>
+                    
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Fórmula Devine
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {resultadoPesoIdeal.devine} kg
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Fórmula Robinson
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {resultadoPesoIdeal.robinson} kg
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Fórmula Miller
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {resultadoPesoIdeal.miller} kg
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Fórmula Hamwi
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {resultadoPesoIdeal.hamwi} kg
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              )}
+            </Grid>
+          </>
         )}
       </Grid>
     </Container>

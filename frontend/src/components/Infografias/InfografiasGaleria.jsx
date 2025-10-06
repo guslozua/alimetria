@@ -25,16 +25,18 @@ import {
   Download as DownloadIcon,
   Add as AddIcon,
   Visibility as VisibilityIcon,
-  FilterList as FilterListIcon
+  FilterList as FilterListIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { obtenerInfografias, obtenerCategorias, descargarInfografia } from '../../services/infografias.service';
 import InfografiasDetalle from './InfografiasDetalle';
 import InfografiasForm from './InfografiasForm';
-import { useAuth } from '../../context/AuthContext'; // Importar el contexto de autenticación
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const InfografiasGaleria = () => {
-  // Usar el contexto de autenticación
   const { user, isAdmin, isNutricionista } = useAuth();
+  const navigate = useNavigate();
   
   const [infografias, setInfografias] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -143,12 +145,38 @@ const InfografiasGaleria = () => {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box mb={4}>
-        <Typography variant="h4" gutterBottom>
-          📚 Biblioteca de Infografías Educativas
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Recursos educativos para compartir con tus pacientes
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              📚 Biblioteca de Infografías Educativas
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Recursos educativos para compartir con tus pacientes
+            </Typography>
+          </Box>
+          
+          {/* Botón Administrar - Solo para admin y nutricionistas */}
+          {puedeSubir && (
+            <Button
+              variant="contained"
+              startIcon={<SettingsIcon />}
+              onClick={() => navigate('/infografias/admin')}
+              sx={{
+                bgcolor: '#667eea',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: '#5568d3'
+                },
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 3,
+                py: 1.5
+              }}
+            >
+              Administrar
+            </Button>
+          )}
+        </Box>
       </Box>
 
       {/* Filtros */}
