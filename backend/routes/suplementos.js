@@ -15,4 +15,9 @@ router.get('/busqueda-inteligente', middlewareBasico, suplementosController.busq
 router.get('/dashboard', middlewareBasico, suplementosController.dashboard);
 router.get('/:id', middlewareBasico, suplementosController.obtenerDetalle);
 
+// Rutas protegidas (requieren autenticación - por ahora sin middleware)
+router.post('/', middlewareBasico, suplementosController.crear);
+router.put('/:id', middlewareBasico, suplementosController.actualizar);
+router.delete('/:id', middlewareBasico, suplementosController.eliminar);
+
 module.exports = router;

@@ -334,6 +334,329 @@ const suplementosController = {
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
+  },
+
+  // POST /api/suplementos - Crear nuevo suplemento
+  async crear(req, res) {
+    try {
+      const {
+        nombre,
+        nombre_cientifico,
+        categoria_id,
+        descripcion_corta,
+        descripcion_detallada,
+        para_que_sirve,
+        beneficios_principales,
+        dosis_recomendada,
+        dosis_minima,
+        dosis_maxima,
+        forma_presentacion,
+        frecuencia_recomendada,
+        mejor_momento_toma,
+        duracion_tratamiento_tipica,
+        nivel_evidencia,
+        destacado,
+        // Datos relacionados
+        indicaciones,
+        contraindicaciones,
+        efectos_secundarios,
+        interacciones,
+        referencias
+      } = req.body;
+
+      // Validaciones básicas
+      if (!nombre || !categoria_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'El nombre y la categoría son obligatorios'
+        });
+      }
+
+      // Convertir beneficios a JSON
+      const beneficiosJSON = Array.isArray(beneficios_principales) 
+        ? JSON.stringify(beneficios_principales)
+        : beneficios_principales;
+
+      // Insertar suplemento principal
+      const insertQuery = `
+        INSERT INTO suplementos (
+          nombre, nombre_cientifico, categoria_id, descripcion_corta, 
+          descripcion_detallada, para_que_sirve, beneficios_principales,
+          dosis_recomendada, dosis_minima, dosis_maxima, forma_presentacion,
+          frecuencia_recomendada, mejor_momento_toma, duracion_tratamiento_tipica,
+          nivel_evidencia, destacado, activo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+      `;
+
+      const result = await executeQuery(insertQuery, [
+        nombre,
+        nombre_cientifico || null,
+        categoria_id,
+        descripcion_corta || null,
+        descripcion_detallada || null,
+        para_que_sirve || null,
+        beneficiosJSON || null,
+        dosis_recomendada || null,
+        dosis_minima || null,
+        dosis_maxima || null,
+        forma_presentacion || 'cápsula',
+        frecuencia_recomendada || null,
+        mejor_momento_toma || null,
+        duracion_tratamiento_tipica || null,
+        nivel_evidencia || 'media',
+        destacado || 0
+      ]);
+
+      const suplementoId = result.insertId;
+
+      // Insertar indicaciones
+      if (indicaciones && indicaciones.length > 0) {
+        const indicacionesQuery = `
+          INSERT INTO suplemento_indicaciones 
+          (suplemento_id, indicacion, perfil_paciente, nivel_recomendacion, notas_adicionales)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        for (const ind of indicaciones) {
+          await executeQuery(indicacionesQuery, [
+            suplementoId,
+            ind.indicacion,
+            ind.perfil_paciente || null,
+            ind.nivel_recomendacion || 'media',
+            ind.notas_adicionales || null
+          ]);
+        }
+      }
+
+      // Insertar contraindicaciones
+      if (contraindicaciones && contraindicaciones.length > 0) {
+        const contraindicacionesQuery = `
+          INSERT INTO suplemento_contraindicaciones 
+          (suplemento_id, tipo, descripcion, poblacion_afectada, severidad)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        for (const contra of contraindicaciones) {
+          await executeQuery(contraindicacionesQuery, [
+            suplementoId,
+            contra.tipo || 'precaucion',
+            contra.descripcion,
+            contra.poblacion_afectada || null,
+            contra.severidad || 'media'
+          ]);
+        }
+      }
+
+      // Insertar efectos secundarios
+      if (efectos_secundarios && efectos_secundarios.length > 0) {
+        const efectosQuery = `
+          INSERT INTO suplemento_efectos_secundarios 
+          (suplemento_id, efecto_secundario, frecuencia, descripcion, manejo_recomendado)
+          VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        for (const efecto of efectos_secundarios) {
+          await executeQuery(efectosQuery, [
+            suplementoId,
+            efecto.efecto_secundario,
+            efecto.frecuencia || 'poco_común',
+            efecto.descripcion || null,
+            efecto.manejo_recomendado || null
+          ]);
+        }
+      }
+
+      // Insertar interacciones
+      if (interacciones && interacciones.length > 0) {
+        const interaccionesQuery = `
+          INSERT INTO suplemento_interacciones 
+          (suplemento_id, tipo_interaccion, nombre_interaccion, descripcion_interaccion, severidad, recomendacion)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        
+        for (const inter of interacciones) {
+          await executeQuery(interaccionesQuery, [
+            suplementoId,
+            inter.tipo_interaccion,
+            inter.nombre_interaccion,
+            inter.descripcion_interaccion || null,
+            inter.severidad || 'moderada',
+            inter.recomendacion || null
+          ]);
+        }
+      }
+
+      // Insertar referencias
+      if (referencias && referencias.length > 0) {
+        const referenciasQuery = `
+          INSERT INTO suplemento_referencias 
+          (suplemento_id, titulo_estudio, autores, revista_publicacion, año_publicacion, 
+           tipo_estudio, url_referencia, resumen_hallazgos, calidad_evidencia)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        
+        for (const ref of referencias) {
+          await executeQuery(referenciasQuery, [
+            suplementoId,
+            ref.titulo_estudio || null,
+            ref.autores || null,
+            ref.revista_publicacion || null,
+            ref.año_publicacion || null,
+            ref.tipo_estudio || 'observacional',
+            ref.url_referencia || null,
+            ref.resumen_hallazgos || null,
+            ref.calidad_evidencia || 'moderada'
+          ]);
+        }
+      }
+
+      res.status(201).json({
+        success: true,
+        message: 'Suplemento creado exitosamente',
+        data: {
+          id: suplementoId
+        }
+      });
+    } catch (error) {
+      console.error('Error al crear suplemento:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al crear el suplemento',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
+
+  // PUT /api/suplementos/:id - Actualizar suplemento
+  async actualizar(req, res) {
+    try {
+      const { id } = req.params;
+      const {
+        nombre,
+        nombre_cientifico,
+        categoria_id,
+        descripcion_corta,
+        descripcion_detallada,
+        para_que_sirve,
+        beneficios_principales,
+        dosis_recomendada,
+        dosis_minima,
+        dosis_maxima,
+        forma_presentacion,
+        frecuencia_recomendada,
+        mejor_momento_toma,
+        duracion_tratamiento_tipica,
+        nivel_evidencia,
+        destacado,
+        activo
+      } = req.body;
+
+      // Verificar que el suplemento existe
+      const existeQuery = 'SELECT id FROM suplementos WHERE id = ?';
+      const [existe] = await executeQuery(existeQuery, [id]);
+      
+      if (!existe) {
+        return res.status(404).json({
+          success: false,
+          message: 'Suplemento no encontrado'
+        });
+      }
+
+      // Convertir beneficios a JSON si es necesario
+      const beneficiosJSON = Array.isArray(beneficios_principales) 
+        ? JSON.stringify(beneficios_principales)
+        : beneficios_principales;
+
+      // Actualizar suplemento principal
+      const updateQuery = `
+        UPDATE suplementos SET
+          nombre = ?,
+          nombre_cientifico = ?,
+          categoria_id = ?,
+          descripcion_corta = ?,
+          descripcion_detallada = ?,
+          para_que_sirve = ?,
+          beneficios_principales = ?,
+          dosis_recomendada = ?,
+          dosis_minima = ?,
+          dosis_maxima = ?,
+          forma_presentacion = ?,
+          frecuencia_recomendada = ?,
+          mejor_momento_toma = ?,
+          duracion_tratamiento_tipica = ?,
+          nivel_evidencia = ?,
+          destacado = ?,
+          activo = ?
+        WHERE id = ?
+      `;
+
+      await executeQuery(updateQuery, [
+        nombre,
+        nombre_cientifico || null,
+        categoria_id,
+        descripcion_corta || null,
+        descripcion_detallada || null,
+        para_que_sirve || null,
+        beneficiosJSON || null,
+        dosis_recomendada || null,
+        dosis_minima || null,
+        dosis_maxima || null,
+        forma_presentacion || 'cápsula',
+        frecuencia_recomendada || null,
+        mejor_momento_toma || null,
+        duracion_tratamiento_tipica || null,
+        nivel_evidencia || 'media',
+        destacado || 0,
+        activo !== undefined ? activo : 1,
+        id
+      ]);
+
+      res.json({
+        success: true,
+        message: 'Suplemento actualizado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error al actualizar suplemento:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al actualizar el suplemento',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
+
+  // DELETE /api/suplementos/:id - Eliminar suplemento (soft delete)
+  async eliminar(req, res) {
+    try {
+      const { id } = req.params;
+
+      // Verificar que el suplemento existe
+      const existeQuery = 'SELECT id FROM suplementos WHERE id = ?';
+      const [existe] = await executeQuery(existeQuery, [id]);
+      
+      if (!existe) {
+        return res.status(404).json({
+          success: false,
+          message: 'Suplemento no encontrado'
+        });
+      }
+
+      // Soft delete - marcar como inactivo
+      const deleteQuery = 'UPDATE suplementos SET activo = 0 WHERE id = ?';
+      await executeQuery(deleteQuery, [id]);
+
+      res.json({
+        success: true,
+        message: 'Suplemento eliminado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error al eliminar suplemento:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al eliminar el suplemento',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
   }
 };
 

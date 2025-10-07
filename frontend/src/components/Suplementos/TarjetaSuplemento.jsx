@@ -15,7 +15,9 @@ import {
   TrendingUp as TrendingUpIcon,
   Info as InfoIcon,
   Favorite as FavoriteIcon,
-  FavoriteBorder as FavoriteBorderIcon
+  FavoriteBorder as FavoriteBorderIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useThemeMode } from '../../context/ThemeContext';
 
@@ -24,6 +26,8 @@ const TarjetaSuplemento = ({
   vista = 'grid',
   onClick, 
   onFavorito,
+  onEditar,
+  onEliminar,
   esFavorito = false 
 }) => {
   const { darkMode } = useThemeMode();
@@ -79,6 +83,22 @@ const TarjetaSuplemento = ({
     e.stopPropagation();
     if (onFavorito) {
       onFavorito(id, !esFavorito);
+    }
+  };
+
+  const handleEditarClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEditar) {
+      onEditar(suplemento);
+    }
+  };
+
+  const handleEliminarClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEliminar) {
+      onEliminar(suplemento);
     }
   };
 
@@ -172,13 +192,39 @@ const TarjetaSuplemento = ({
                 </Typography>
               )}
               
-              <IconButton
-                onClick={handleFavoritoClick}
-                size="small"
-                sx={{ color: esFavorito ? '#ef4444' : 'text.secondary' }}
-              >
-                {esFavorito ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-              </IconButton>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <IconButton
+                  onClick={handleFavoritoClick}
+                  size="small"
+                  sx={{ color: esFavorito ? '#ef4444' : 'text.secondary' }}
+                >
+                  {esFavorito ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                </IconButton>
+                
+                {onEditar && (
+                  <Tooltip title="Editar">
+                    <IconButton
+                      onClick={handleEditarClick}
+                      size="small"
+                      sx={{ color: '#667eea' }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                
+                {onEliminar && (
+                  <Tooltip title="Eliminar">
+                    <IconButton
+                      onClick={handleEliminarClick}
+                      size="small"
+                      sx={{ color: '#ef4444' }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
             </Box>
           </Box>
         </CardContent>
@@ -205,7 +251,6 @@ const TarjetaSuplemento = ({
       }}
       onClick={handleCardClick}
     >
-      {/* TODO: Verificar si hay algún valor que se renderice aquí */}
       {destacado ? (
         <Box
           sx={{
@@ -246,6 +291,59 @@ const TarjetaSuplemento = ({
       >
         {esFavorito ? <FavoriteIcon /> : <FavoriteBorderIcon />}
       </IconButton>
+
+      {/* Botones de acción en vista grid */}
+      {(onEditar || onEliminar) && (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            display: 'flex',
+            gap: 0.5,
+            opacity: 0,
+            transition: 'opacity 0.2s',
+            '.MuiCard-root:hover &': {
+              opacity: 1
+            },
+            zIndex: 1
+          }}
+        >
+          {onEditar && (
+            <Tooltip title="Editar">
+              <IconButton
+                onClick={handleEditarClick}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.95)',
+                  color: '#667eea',
+                  boxShadow: 1,
+                  '&:hover': { bgcolor: '#667eea', color: 'white' }
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          
+          {onEliminar && (
+            <Tooltip title="Eliminar">
+              <IconButton
+                onClick={handleEliminarClick}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.95)',
+                  color: '#ef4444',
+                  boxShadow: 1,
+                  '&:hover': { bgcolor: '#ef4444', color: 'white' }
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      )}
 
       <CardContent sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ textAlign: 'center', mb: 2 }}>

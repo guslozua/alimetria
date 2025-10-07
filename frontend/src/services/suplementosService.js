@@ -99,6 +99,60 @@ const suplementosService = {
     }
   },
 
+  // Crear nuevo suplemento
+  async crear(datos) {
+    try {
+      console.log('📦 Creando nuevo suplemento:', datos.nombre);
+      const response = await api.post('/suplementos', datos);
+      
+      if (response.success) {
+        console.log('✅ Suplemento creado exitosamente');
+        return response;
+      } else {
+        throw new Error(response.message || 'Error al crear suplemento');
+      }
+    } catch (error) {
+      console.error('❌ Error al crear suplemento:', error);
+      throw error;
+    }
+  },
+
+  // Actualizar suplemento existente
+  async actualizar(id, datos) {
+    try {
+      console.log('🔄 Actualizando suplemento:', id);
+      const response = await api.put(`/suplementos/${id}`, datos);
+      
+      if (response.success) {
+        console.log('✅ Suplemento actualizado exitosamente');
+        return response;
+      } else {
+        throw new Error(response.message || 'Error al actualizar suplemento');
+      }
+    } catch (error) {
+      console.error('❌ Error al actualizar suplemento:', error);
+      throw error;
+    }
+  },
+
+  // Eliminar suplemento
+  async eliminar(id) {
+    try {
+      console.log('🗑️ Eliminando suplemento:', id);
+      const response = await api.delete(`/suplementos/${id}`);
+      
+      if (response.success) {
+        console.log('✅ Suplemento eliminado exitosamente');
+        return response;
+      } else {
+        throw new Error(response.message || 'Error al eliminar suplemento');
+      }
+    } catch (error) {
+      console.error('❌ Error al eliminar suplemento:', error);
+      throw error;
+    }
+  },
+
   // Funciones utilitarias
   obtenerIconoCategoria(categoria) {
     const iconos = {
